@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Дархост #{{ request.id }} - Systemi Darkhostho{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-file-text me-2"></i>Дархост #{{ request.id }}
+                </h4>
+                <span class="badge bg-{{ request.get_status_class() }} fs-6">
+                    {{ request.get_status_label() }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-sm-4 text-muted">
+                        <i class="bi bi-tag me-1"></i>Мавзӯъ
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="badge bg-secondary fs-6">{{ request.topic.title }}</span>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-sm-4 text-muted">
+                        <i class="bi bi-calendar me-1"></i>Сана
+                    </div>
+                    <div class="col-sm-8">
+                        {{ request.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-sm-4 text-muted">
+                        <i class="bi bi-person me-1"></i>Корбар
+                    </div>
+                    <div class="col-sm-8">
+                        {{ request.author.username }}
+                    </div>
+                </div>
+                
+                {% if request.comment %}
+                <div class="row mb-4">
+                    <div class="col-sm-4 text-muted">
+                        <i class="bi bi-chat-text me-1"></i>Шарҳ
+                    </div>
+                    <div class="col-sm-8">
+                        <p class="mb-0">{{ request.comment }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if request.latitude and request.longitude %}
+                <div class="row mb-4">
+                    <div class="col-sm-4 text-muted">
+                        <i class="bi bi-geo-alt me-1"></i>Ҷойгиршавӣ
+                    </div>
+                    <div class="col-sm-8">
+                        <div id="requestMap" style="height: 300px; border-radius: 8px;" class="mb-2"></div>
+                        <small class="text-muted">
+                            <i class="bi bi-pin-map me-1"></i>
+                            {{ request.latitude }}, {{ request.longitude }}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if request.media_filename %}
+                <div class="row mb-4">
+                    <div class="col-sm-4 text-muted">
+                        <i class="bi bi-paperclip me-1"></i>Файл
+                    </div>
+                    <div class="col-sm-8">
+                        {% set ext = request.media_filename.split('.')[-1].lower() %}
+                        {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+                            <img src="/static/uploads/{{ request.media_filename }}" 
+                                 class="img-fluid rounded" 
+                                 style="max-height: 400px;">
+                        {% elif ext in ['mp4', 'mov', 'avi', 'webm'] %}
+                            <video controls class="w-100 rounded" style="max-height: 400px;">
+                                <source src="/static/uploads/{{ request.media_filename }}" type="video/{{ ext }}">
+                                Браузери шумо видеоро дастгирӣ намекунад.
+                            </video>
+                        {% else %}
+                            <a href="/static/uploads/{{ request.media_filename }}" 
+                               class="btn btn-outline-primary" 
+                               target="_blank">
+                                <i class="bi bi-download me-1"></i>Боргирӣ кардан
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{% if current_user.is_admin() %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('user.dashboard') }}{% endif %}" 
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Бозгашт
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if request.latitude and request.longitude %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lat = {{ request.latitude }};
+    const lng = {{ request.longitude }};
+    
+    const map = L.map('requestMap').setView([lat, lng], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    
+    L.marker([lat, lng]).addTo(map)
+        .bindPopup('Ҷойгиршавии дархост')
+        .openPopup();
+});
+</script>
+{% endif %}
+{% endblock %}

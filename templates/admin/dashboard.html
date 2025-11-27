@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Панели Админ - Systemi Darkhostho{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2 me-2"></i>Панели Админ</h2>
+    <span class="badge bg-primary fs-6">{{ requests|length }} дархост</span>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('admin.dashboard') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="topic" class="form-label">Филтр аз рӯи мавзӯъ</label>
+                <select class="form-select" id="topic" name="topic">
+                    <option value="">Ҳамаи мавзӯъҳо</option>
+                    {% for topic in topics %}
+                        <option value="{{ topic.id }}" {% if selected_topic == topic.id %}selected{% endif %}>
+                            {{ topic.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel me-1"></i>Филтр
+                </button>
+            </div>
+            {% if selected_topic %}
+            <div class="col-md-2">
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Пок кардан
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% if requests %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Мавзӯъ</th>
+                <th>Корбар</th>
+                <th>Шарҳ</th>
+                <th>Сана</th>
+                <th>Ҳолат</th>
+                <th>Амалҳо</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td><strong>{{ req.id }}</strong></td>
+                <td>
+                    <span class="badge bg-secondary">{{ req.topic.title }}</span>
+                </td>
+                <td>{{ req.author.username }}</td>
+                <td class="text-truncate" style="max-width: 200px;">
+                    {{ req.comment[:50] }}{% if req.comment|length > 50 %}...{% endif %}
+                </td>
+                <td>
+                    <small class="text-muted">
+                        {{ req.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </small>
+                </td>
+                <td>
+                    <span class="badge bg-{{ req.get_status_class() }}">
+                        {{ req.get_status_label() }}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('user.view_request', id=req.id) }}" 
+                           class="btn btn-outline-info" 
+                           title="Дидан">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if req.latitude and req.longitude %}
+                        <button type="button" 
+                                class="btn btn-outline-success" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#mapModal"
+                                data-lat="{{ req.latitude }}"
+                                data-lng="{{ req.longitude }}"
+                                data-title="Дархост #{{ req.id }}"
+                                title="Дидани харита">
+                            <i class="bi bi-geo-alt"></i>
+                        </button>
+                        {% endif %}
+                        <button type="button" 
+                                class="btn btn-outline-primary dropdown-toggle" 
+                                data-bs-toggle="dropdown" 
+                                title="Тағйири ҳолат">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Тағйири ҳолат</h6></li>
+                            {% for status_key, status_label in req.STATUS_LABELS.items() %}
+                            <li>
+                                <form method="POST" action="{{ url_for('admin.update_status', id=req.id) }}" class="d-inline">
+                                    <input type="hidden" name="status" value="{{ status_key }}">
+                                    <button type="submit" class="dropdown-item {% if req.status == status_key %}active{% endif %}">
+                                        {{ status_label }}
+                                    </button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-inbox display-1 text-muted"></i>
+    <h4 class="mt-3 text-muted">Дархостҳо ёфт нашуданд</h4>
+    <p class="text-muted">Ҳоло ягон дархост нест</p>
+</div>
+{% endif %}
+
+<div class="modal fade" id="mapModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-geo-alt-fill me-2"></i>Ҷойгиршавӣ
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="requestMap" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mapModal = document.getElementById('mapModal');
+    let map = null;
+    let marker = null;
+    
+    mapModal.addEventListener('shown.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const lat = parseFloat(button.getAttribute('data-lat'));
+        const lng = parseFloat(button.getAttribute('data-lng'));
+        const title = button.getAttribute('data-title');
+        
+        if (!map) {
+            map = L.map('requestMap').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+        } else {
+            map.setView([lat, lng], 15);
+        }
+        
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        
+        marker = L.marker([lat, lng]).addTo(map)
+            .bindPopup(title)
+            .openPopup();
+        
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 100);
+    });
+});
+</script>
+{% endblock %}

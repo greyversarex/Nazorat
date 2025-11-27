@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Дархости нав - Systemi Darkhostho{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>Дархости нав
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="requestForm">
+                    <div class="mb-4">
+                        <label for="topic_id" class="form-label">
+                            <i class="bi bi-tag me-1"></i>Мавзӯъ <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select form-select-lg" id="topic_id" name="topic_id" required>
+                            <option value="">Мавзӯъро интихоб кунед...</option>
+                            {% for topic in topics %}
+                                <option value="{{ topic.id }}">{{ topic.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-geo-alt me-1"></i>Ҷойгиршавӣ
+                        </label>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                        
+                        <div class="d-flex gap-2 align-items-center">
+                            <button type="button" 
+                                    id="getLocationBtn" 
+                                    class="btn btn-outline-success btn-lg flex-grow-1">
+                                <i class="bi bi-crosshair me-2"></i>Муайян кардани ҷойгиршавӣ
+                            </button>
+                            <span id="locationStatus" class="d-none">
+                                <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                            </span>
+                        </div>
+                        <div id="locationInfo" class="mt-2 small text-muted d-none">
+                            <i class="bi bi-pin-map me-1"></i>
+                            <span id="locationCoords"></span>
+                        </div>
+                        <div id="locationError" class="mt-2 text-danger small d-none"></div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="comment" class="form-label">
+                            <i class="bi bi-chat-text me-1"></i>Шарҳ / Тавсиф
+                        </label>
+                        <textarea class="form-control" 
+                                  id="comment" 
+                                  name="comment" 
+                                  rows="4"
+                                  placeholder="Тавзеҳоти иловагӣ дар бораи дархост..."></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="media" class="form-label">
+                            <i class="bi bi-paperclip me-1"></i>Расм ё видео
+                        </label>
+                        <input type="file" 
+                               class="form-control form-control-lg" 
+                               id="media" 
+                               name="media"
+                               accept="image/*,video/*">
+                        <div class="form-text">
+                            Форматҳои иҷозатшуда: PNG, JPG, GIF, MP4, MOV, AVI, WEBM (ҳадди аксар 50MB)
+                        </div>
+                        <div id="mediaPreview" class="mt-2 d-none">
+                            <img id="imagePreview" class="img-thumbnail d-none" style="max-height: 200px;">
+                            <video id="videoPreview" class="d-none" style="max-height: 200px;" controls></video>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                            <i class="bi bi-send me-1"></i>Равон кардан
+                        </button>
+                        <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-lg me-1"></i>Бекор
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const getLocationBtn = document.getElementById('getLocationBtn');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+    const locationStatus = document.getElementById('locationStatus');
+    const locationInfo = document.getElementById('locationInfo');
+    const locationCoords = document.getElementById('locationCoords');
+    const locationError = document.getElementById('locationError');
+    
+    getLocationBtn.addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            locationError.textContent = 'Браузери шумо геолокацияро дастгирӣ намекунад.';
+            locationError.classList.remove('d-none');
+            return;
+        }
+        
+        getLocationBtn.disabled = true;
+        getLocationBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Ҷустуҷӯ...';
+        locationError.classList.add('d-none');
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                latitudeInput.value = lat;
+                longitudeInput.value = lng;
+                
+                locationStatus.classList.remove('d-none');
+                locationInfo.classList.remove('d-none');
+                locationCoords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                
+                getLocationBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Ҷойгиршавӣ муайян шуд';
+                getLocationBtn.classList.remove('btn-outline-success');
+                getLocationBtn.classList.add('btn-success');
+                getLocationBtn.disabled = false;
+            },
+            function(error) {
+                getLocationBtn.disabled = false;
+                getLocationBtn.innerHTML = '<i class="bi bi-crosshair me-2"></i>Муайян кардани ҷойгиршавӣ';
+                
+                let errorMessage = 'Хато дар гирифтани ҷойгиршавӣ.';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Дастрасӣ ба ҷойгиршавӣ рад карда шуд. Лутфан иҷозат диҳед.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Маълумоти ҷойгиршавӣ дастнорас аст.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Вақти дархости ҷойгиршавӣ гузашт.';
+                        break;
+                }
+                locationError.textContent = errorMessage;
+                locationError.classList.remove('d-none');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    });
+    
+    const mediaInput = document.getElementById('media');
+    const mediaPreview = document.getElementById('mediaPreview');
+    const imagePreview = document.getElementById('imagePreview');
+    const videoPreview = document.getElementById('videoPreview');
+    
+    mediaInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            mediaPreview.classList.add('d-none');
+            return;
+        }
+        
+        const url = URL.createObjectURL(file);
+        
+        if (file.type.startsWith('image/')) {
+            imagePreview.src = url;
+            imagePreview.classList.remove('d-none');
+            videoPreview.classList.add('d-none');
+            mediaPreview.classList.remove('d-none');
+        } else if (file.type.startsWith('video/')) {
+            videoPreview.src = url;
+            videoPreview.classList.remove('d-none');
+            imagePreview.classList.add('d-none');
+            mediaPreview.classList.remove('d-none');
+        }
+    });
+});
+</script>
+{% endblock %}

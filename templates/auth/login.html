@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Воридшавӣ - Systemi Darkhostho{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-envelope-paper-fill display-4 text-primary"></i>
+                    <h2 class="mt-3">Воридшавӣ</h2>
+                    <p class="text-muted">Ба система ворид шавед</p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="bi bi-person me-1"></i>Номи корбар
+                        </label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="username" 
+                               name="username" 
+                               required 
+                               autocomplete="username"
+                               placeholder="Номи корбарро ворид кунед">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="bi bi-lock me-1"></i>Рамз
+                        </label>
+                        <input type="password" 
+                               class="form-control form-control-lg" 
+                               id="password" 
+                               name="password" 
+                               required 
+                               autocomplete="current-password"
+                               placeholder="Рамзро ворид кунед">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Воридшавӣ
+                    </button>
+                </form>
+                
+                <hr class="my-4">
+                
+                <p class="text-center mb-0">
+                    Ҳисоб надоред? 
+                    <a href="{{ url_for('auth.register') }}" class="text-decoration-none">Бақайдгирӣ</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
