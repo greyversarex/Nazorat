@@ -103,6 +103,7 @@
                             {% for status_key, status_label in req.STATUS_LABELS.items() %}
                             <li>
                                 <form method="POST" action="{{ url_for('admin.update_status', id=req.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input type="hidden" name="status" value="{{ status_key }}">
                                     <button type="submit" class="dropdown-item {% if req.status == status_key %}active{% endif %}">
                                         {{ status_label }}
