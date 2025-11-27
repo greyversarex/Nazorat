@@ -31,8 +31,10 @@ A Progressive Web Application (PWA) for managing citizen requests/tickets. Built
 ```
 
 ## User Roles
-- **Admin**: Can manage topics, view all requests, change request statuses, view users
+- **Admin**: Can manage topics, create/delete users, view all requests, change request statuses
 - **User**: Can submit requests with location and media, view own requests
+
+Note: Open registration is disabled. Only admins can create new users from the admin panel.
 
 ## Default Admin Account
 - Username: `admin`
@@ -75,3 +77,4 @@ The app runs on port 5000.
 ## Recent Changes
 - November 2024: Initial implementation with all core features
 - November 2025: Added CSRF protection and open redirect vulnerability fix
+- November 2025: Removed open registration; user creation now admin-only via admin panel

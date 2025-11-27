@@ -130,3 +130,63 @@ def update_status(id):
 def users():
     users = User.query.order_by(User.created_at.desc()).all()
     return render_template('admin/users.html', users=users)
+
+@admin_bp.route('/users/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_user():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        role = request.form.get('role', 'user')
+        
+        if not username or not password:
+            flash('Номи корбар ва рамз лозим аст.', 'danger')
+            return render_template('admin/user_form.html', user=None)
+        
+        if len(password) < 6:
+            flash('Рамз бояд ҳадди ақал 6 аломат дошта бошад.', 'danger')
+            return render_template('admin/user_form.html', user=None)
+        
+        if password != confirm_password:
+            flash('Рамзҳо мувофиқат намекунанд.', 'danger')
+            return render_template('admin/user_form.html', user=None)
+        
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Ин номи корбар аллакай истифода шудааст.', 'danger')
+            return render_template('admin/user_form.html', user=None)
+        
+        if role not in ['user', 'admin']:
+            role = 'user'
+        
+        user = User(username=username, role=role)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        
+        flash('Корбар бо муваффақият илова карда шуд.', 'success')
+        return redirect(url_for('admin.users'))
+    
+    return render_template('admin/user_form.html', user=None)
+
+@admin_bp.route('/users/<int:id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    
+    if user.id == current_user.id:
+        flash('Шумо худро нест карда наметавонед.', 'danger')
+        return redirect(url_for('admin.users'))
+    
+    if user.requests:
+        flash('Ин корбарро нест кардан мумкин нест, зеро дархостҳо доранд.', 'danger')
+        return redirect(url_for('admin.users'))
+    
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash('Корбар бо муваффақият нест карда шуд.', 'success')
+    return redirect(url_for('admin.users'))
