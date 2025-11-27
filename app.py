@@ -39,6 +39,16 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(user_bp, url_prefix='/user')
     
+    @app.after_request
+    def add_cache_control(response):
+        if 'text/html' in response.content_type:
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        elif 'text/css' in response.content_type or 'application/javascript' in response.content_type:
+            response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+        return response
+    
     with app.app_context():
         db.create_all()
         create_default_admin()
