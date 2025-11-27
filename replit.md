@@ -6,11 +6,12 @@ A Progressive Web Application (PWA) for managing citizen requests/tickets. Built
 ## Project Structure
 ```
 ├── app.py              # Main Flask application factory
+├── extensions.py       # Flask extensions (db, bcrypt, login_manager, csrf)
 ├── models.py           # SQLAlchemy database models
 ├── routes/             # Blueprint routes
 │   ├── __init__.py
 │   ├── main.py         # Main routes (index, manifest, sw)
-│   ├── auth.py         # Authentication routes
+│   ├── auth.py         # Authentication routes (with open redirect protection)
 │   ├── admin.py        # Admin dashboard routes
 │   └── user.py         # User dashboard routes
 ├── templates/          # Jinja2 templates
@@ -65,5 +66,12 @@ The app runs on port 5000.
 - `.gitignore` excludes `instance/` (database) and `static/uploads/` (media)
 - This ensures production data is not overwritten when pushing code updates
 
+## Security Features
+1. **CSRF Protection**: Flask-WTF CSRFProtect on all POST forms
+2. **Open Redirect Prevention**: Login route validates redirect URLs to prevent attacks
+3. **Password Hashing**: bcrypt for secure password storage
+4. **Session Management**: Flask-Login with secure session handling
+
 ## Recent Changes
 - November 2024: Initial implementation with all core features
+- November 2025: Added CSRF protection and open redirect vulnerability fix
