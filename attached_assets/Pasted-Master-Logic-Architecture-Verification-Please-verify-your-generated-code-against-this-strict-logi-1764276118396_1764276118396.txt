@@ -1,0 +1,45 @@
+Master Logic & Architecture Verification
+Please verify your generated code against this strict logic flow to ensure reliability and functionality:
+1. Database Schema & Relationships (SQLAlchemy)
+User Model: Must have id, username, password_hash (use bcrypt), role ('admin' or 'user'), and created_at.
+Topic Model: id, name (Tajik names). Relationship: One-to-Many with Requests.
+Request Model: id, user_id (ForeignKey), topic_id (ForeignKey), comment, lat (Float), lon (Float), media_path (String), status (String, default='new'), created_at.
+Status Logic:
+new -> Нав (Color: Blue)
+in_progress -> Дар баррасӣ (Color: Yellow/Warning)
+completed -> Иҷро шуд (Color: Green/Success)
+rejected -> Рад шуд (Color: Red/Danger)
+2. Authentication Logic (The "Single Gate")
+Route: /login (GET/POST).
+Logic:
+User enters credentials.
+System validates hash.
+Check Role:
+If role == 'admin' -> redirect(url_for('admin_dashboard'))
+If role == 'user' -> redirect(url_for('user_dashboard'))
+Security: Protect all /admin/* routes with a wrapper @login_required AND a role check. If a normal User tries to access /admin, flash an error and redirect to their dashboard.
+3. User Workflow (The "Reporter")
+Dashboard: Shows a table of only their own requests.
+Create Request Flow:
+Topic: User selects from a <select> dropdown populated from the DB.
+Geolocation: User clicks a button "Муайян кардани ҷойгиршавӣ".
+JS Logic: Call navigator.geolocation.getCurrentPosition.
+Success: Fill hidden inputs <input name="lat"> and <input name="lon">. Show "Location Found ✅".
+Error: Alert the user "Please enable GPS".
+Media: User uploads image/video.
+Backend: Check file extension (allow jpg, png, mp4). Secure the filename (use werkzeug.utils.secure_filename). Save to static/uploads.
+Submission: On success, redirect to Dashboard with a flash message "Дархост фиристода шуд".
+4. Admin Workflow (The "Controller")
+Dashboard: Shows all requests.
+Filtering: Add a dropdown to filter list by Topic or Status.
+Detailed View:
+Admin clicks "View" on a request.
+Map Logic: Initialize a Leaflet map. Add a marker at [request.lat, request.lon]. Popup text: User's comment.
+Media: Display the image (using <img>) or video (using <video>) if it exists.
+Action: A form to update the status. When saved, it updates the DB and redirects back.
+5. PWA & Mobile Optimization
+Manifest: Ensure manifest.json points to valid icons and has display: standalone.
+Viewport: Ensure <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"> is set to prevent zooming issues on inputs.
+6. Deployment Safety
+Persistence: Ensure the DB initialization code (db.create_all()) is inside a check so it doesn't overwrite existing data on restart.
+Git: Verify .gitignore exists and includes instance/ and static/uploads/.

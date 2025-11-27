@@ -22,12 +22,23 @@
                     {% endfor %}
                 </select>
             </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Филтр аз рӯи ҳолат</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Ҳамаи ҳолатҳо</option>
+                    {% for status_key, status_label in statuses.items() %}
+                        <option value="{{ status_key }}" {% if selected_status == status_key %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-funnel me-1"></i>Филтр
                 </button>
             </div>
-            {% if selected_topic %}
+            {% if selected_topic or selected_status %}
             <div class="col-md-2">
                 <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-1"></i>Пок кардан
@@ -87,7 +98,7 @@
                                 data-bs-target="#mapModal"
                                 data-lat="{{ req.latitude }}"
                                 data-lng="{{ req.longitude }}"
-                                data-title="Дархост #{{ req.id }}"
+                                data-title="{{ req.comment[:100] if req.comment else 'Дархост #' ~ req.id }}"
                                 title="Дидани харита">
                             <i class="bi bi-geo-alt"></i>
                         </button>

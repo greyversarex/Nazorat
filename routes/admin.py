@@ -20,19 +20,26 @@ def admin_required(f):
 @admin_required
 def dashboard():
     topic_filter = request.args.get('topic', type=int)
+    status_filter = request.args.get('status', type=str)
     
     query = Request.query.order_by(Request.created_at.desc())
     
     if topic_filter:
         query = query.filter_by(topic_id=topic_filter)
     
+    if status_filter and status_filter in Request.STATUS_LABELS:
+        query = query.filter_by(status=status_filter)
+    
     requests = query.all()
     topics = Topic.query.order_by(Topic.title).all()
+    statuses = Request.STATUS_LABELS
     
     return render_template('admin/dashboard.html', 
                          requests=requests, 
                          topics=topics,
-                         selected_topic=topic_filter)
+                         statuses=statuses,
+                         selected_topic=topic_filter,
+                         selected_status=status_filter)
 
 @admin_bp.route('/topics')
 @login_required
