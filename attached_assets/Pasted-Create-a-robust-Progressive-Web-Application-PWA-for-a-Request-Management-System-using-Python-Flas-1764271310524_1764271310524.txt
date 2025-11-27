@@ -1,0 +1,57 @@
+Create a robust Progressive Web Application (PWA) for a Request Management System using Python (Flask), SQLAlchemy, and Bootstrap 5 for a mobile-first UI. The interface language must be Tajik.
+
+### 1. Project Structure & Deployment Strategy
+- The app will be deployed to a VPS via GitHub.
+- **CRITICAL:** Create a `.gitignore` file immediately. It MUST exclude the SQLite database file (e.g., `instance/site.db`) and the media upload folder (`static/uploads`). This is to ensure that pushing code updates from Replit to GitHub does NOT overwrite the live database or user files on the production server.
+- Ensure the app is structured clearly: separate routes for auth, admin, and user.
+
+### 2. User Roles & Authentication
+- **Roles:** 'Admin' and 'User'.
+- **Login:** A single login page (`/login`) for everyone.
+  - If role is 'Admin' -> Redirect to `/admin/dashboard`.
+  - If role is 'User' -> Redirect to `/user/dashboard`.
+- **Security:** Use proper password hashing (bcrypt) and Flask-Login for session management.
+
+### 3. Database Models
+- **User:** id, username, password_hash, role, created_at.
+- **Topic:** id, title (created by Admin).
+- **Request (Ticket):** id, user_id, topic_id, latitude, longitude, comment, media_filename (photo/video), status, created_at.
+  - Statuses: 'new' (Нав), 'in_progress' (Дар баррасӣ), 'completed' (Иҷро шуд), 'rejected' (Рад шуд).
+
+### 4. Admin Functionality
+- **Topic Management:** Create/Edit/Delete topics (e.g., "Electricity", "Roads", "Water").
+- **Dashboard:**
+  - List of all requests sorted by date (newest first).
+  - Filter requests by 'Topic'.
+  - **Map View:** Integrate **Leaflet.js (OpenStreetMap)**. Show a button "View Map" for each request that opens a modal showing the exact location marker based on lat/long.
+  - **Action:** Admin can change the status of the request (using a dropdown).
+
+### 5. User Functionality
+- **Dashboard:** View list of own submitted requests with their current status.
+- **Create Request (The Core Feature):**
+  - **Step 1:** Select 'Topic' (Dropdown from DB).
+  - **Step 2:** Button "Муайян кардани ҷойгиршавӣ" (Get Location). Use JS Geolocation API. When clicked, capture lat/long into hidden inputs and show a checkmark or text confirming location is found.
+  - **Step 3:** Text area for comments.
+  - **Step 4:** File input for Photo/Video (validate extensions).
+  - **Step 5:** Submit button.
+
+### 6. Localization (Tajik Language)
+Use these translations for the UI:
+- App Name: "Systemi Darkhostho"
+- Login: "Воридшавӣ"
+- Username: "Номи корбар"
+- Password: "Рамз"
+- Submit/Send: "Равон кардан"
+- Topic: "Мавзӯъ"
+- Comment: "Шарҳ / Тавсиф"
+- Get Location: "Муайян кардани ҷойгиршавӣ"
+- Status: "Ҳолат"
+- New: "Нав"
+- In Progress: "Дар баррасӣ"
+- Completed: "Иҷро шуд"
+- Admin Panel: "Панели Админ"
+- My Requests: "Дархостҳои ман"
+
+### 7. PWA Features
+- Add a `manifest.json` and a simple Service Worker so the website can be installed on Android/iOS as an app.
+- Make the design responsive and touch-friendly (large buttons, clean inputs).
