@@ -241,8 +241,15 @@ main {
     z-index: 1;
 }
 
+#locationMap {
+    z-index: 1;
+    min-height: 250px;
+    width: 100%;
+}
+
 .leaflet-container {
     border-radius: 8px;
+    background: #f0f7f2;
 }
 
 .text-truncate {

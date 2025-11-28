@@ -135,22 +135,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 const mapContainer = document.getElementById('locationMapContainer');
                 mapContainer.classList.remove('d-none');
                 
-                if (!window.locationMap) {
-                    window.locationMap = L.map('locationMap').setView([lat, lng], 15);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap'
-                    }).addTo(window.locationMap);
-                    window.locationMarker = L.marker([lat, lng]).addTo(window.locationMap)
-                        .bindPopup('Ҷойгиршавии шумо')
-                        .openPopup();
-                } else {
-                    window.locationMap.setView([lat, lng], 15);
-                    window.locationMarker.setLatLng([lat, lng]);
-                }
-                
                 setTimeout(function() {
+                    if (!window.locationMap) {
+                        window.locationMap = L.map('locationMap', {
+                            center: [lat, lng],
+                            zoom: 15
+                        });
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap',
+                            maxZoom: 19
+                        }).addTo(window.locationMap);
+                        window.locationMarker = L.marker([lat, lng]).addTo(window.locationMap)
+                            .bindPopup('Ҷойгиршавии шумо')
+                            .openPopup();
+                    } else {
+                        window.locationMap.setView([lat, lng], 15);
+                        window.locationMarker.setLatLng([lat, lng]);
+                    }
+                    
                     window.locationMap.invalidateSize();
-                }, 100);
+                    
+                    setTimeout(function() {
+                        window.locationMap.invalidateSize();
+                    }, 300);
+                }, 50);
                 
                 getLocationBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Ҷойгиршавӣ муайян шуд';
                 getLocationBtn.classList.remove('btn-outline-success');
