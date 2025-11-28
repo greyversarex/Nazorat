@@ -60,6 +60,13 @@ main {
 
 .card-header.bg-primary {
     background-color: var(--accent-color) !important;
+    color: #fff !important;
+}
+
+.card-header.bg-primary h4,
+.card-header.bg-primary h5,
+.card-header.bg-primary i {
+    color: #fff !important;
 }
 
 .btn {
