@@ -23,12 +23,12 @@
             <a class="navbar-brand fw-bold" href="/">
                 <i class="bi bi-envelope-paper-fill me-2"></i>Systemi Darkhostho
             </a>
+            {% if current_user.is_authenticated %}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    {% if current_user.is_authenticated %}
                         {% if current_user.is_admin() %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
@@ -78,9 +78,9 @@
                                 </li>
                             </ul>
                         </li>
-                    {% endif %}
                 </ul>
             </div>
+            {% endif %}
         </div>
     </nav>
 
