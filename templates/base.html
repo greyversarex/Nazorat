@@ -32,22 +32,22 @@
                         {% if current_user.is_admin() %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
-                                    <i class="bi bi-speedometer2 me-1"></i>Панели Админ
+                                    <i class="bi bi-grid-1x2-fill me-1"></i>Панели Админ
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin.admin_map') }}">
-                                    <i class="bi bi-map me-1"></i>Харита
+                                    <i class="bi bi-geo-alt-fill me-1"></i>Харита
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin.topics') }}">
-                                    <i class="bi bi-tags me-1"></i>Мавзӯъҳо
+                                    <i class="bi bi-bookmark-fill me-1"></i>Мавзӯъҳо
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin.users') }}">
-                                    <i class="bi bi-people me-1"></i>Корбарон
+                                    <i class="bi bi-people-fill me-1"></i>Корбарон
                                 </a>
                             </li>
                         {% else %}
@@ -64,7 +64,7 @@
                         {% endif %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
+                                <i class="bi bi-person-fill me-1"></i>{{ current_user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><span class="dropdown-item-text text-muted small">
