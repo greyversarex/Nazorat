@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Корбари нав - Systemi Darkhostho{% endblock %}
+{% block title %}{% if user %}Таҳрири корбар{% else %}Корбари нав{% endif %} - Systemi Darkhostho{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -8,46 +8,68 @@
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">
+                    {% if user %}
+                    <i class="bi bi-pencil-square me-2"></i>Таҳрири корбар
+                    {% else %}
                     <i class="bi bi-person-plus me-2"></i>Корбари нав
+                    {% endif %}
                 </h4>
             </div>
             <div class="card-body">
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-4">
+                        <label for="full_name" class="form-label">
+                            <i class="bi bi-person-vcard me-1"></i>Номи пурра (ФИО) <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="full_name" 
+                               name="full_name" 
+                               required
+                               value="{{ user.full_name if user and user.full_name else '' }}"
+                               placeholder="Фамилия Ном Падар">
+                    </div>
+                    
                     <div class="mb-4">
                         <label for="username" class="form-label">
-                            <i class="bi bi-person me-1"></i>Номи корбар <span class="text-danger">*</span>
+                            <i class="bi bi-person me-1"></i>Номи корбар (логин) <span class="text-danger">*</span>
                         </label>
                         <input type="text" 
                                class="form-control form-control-lg" 
                                id="username" 
                                name="username" 
                                required
+                               value="{{ user.username if user else '' }}"
                                placeholder="Номи корбарро ворид кунед">
                     </div>
                     
                     <div class="mb-4">
                         <label for="password" class="form-label">
-                            <i class="bi bi-lock me-1"></i>Рамз <span class="text-danger">*</span>
+                            <i class="bi bi-lock me-1"></i>Рамз {% if not user %}<span class="text-danger">*</span>{% endif %}
                         </label>
                         <input type="password" 
                                class="form-control form-control-lg" 
                                id="password" 
                                name="password" 
-                               required
+                               {% if not user %}required{% endif %}
                                minlength="6"
-                               placeholder="Ҳадди ақал 6 аломат">
+                               placeholder="{% if user %}Барои тағйир додан ворид кунед{% else %}Ҳадди ақал 6 аломат{% endif %}">
+                        {% if user %}
+                        <div class="form-text">Агар рамзро тағйир додан нахоҳед, холӣ гузоред.</div>
+                        {% endif %}
                     </div>
                     
                     <div class="mb-4">
                         <label for="confirm_password" class="form-label">
-                            <i class="bi bi-lock-fill me-1"></i>Тасдиқи рамз <span class="text-danger">*</span>
+                            <i class="bi bi-lock-fill me-1"></i>Тасдиқи рамз {% if not user %}<span class="text-danger">*</span>{% endif %}
                         </label>
                         <input type="password" 
                                class="form-control form-control-lg" 
                                id="confirm_password" 
                                name="confirm_password" 
-                               required
+                               {% if not user %}required{% endif %}
                                placeholder="Рамзро такрор кунед">
                     </div>
                     
@@ -55,15 +77,19 @@
                         <label for="role" class="form-label">
                             <i class="bi bi-shield me-1"></i>Нақш
                         </label>
-                        <select class="form-select form-select-lg" id="role" name="role">
-                            <option value="user" selected>Корбар</option>
-                            <option value="admin">Админ</option>
+                        <select class="form-select form-select-lg" id="role" name="role" {% if user and user.id == current_user.id %}disabled{% endif %}>
+                            <option value="user" {% if not user or (user and user.role == 'user') %}selected{% endif %}>Корбар</option>
+                            <option value="admin" {% if user and user.role == 'admin' %}selected{% endif %}>Админ</option>
                         </select>
+                        {% if user and user.id == current_user.id %}
+                        <input type="hidden" name="role" value="{{ user.role }}">
+                        <div class="form-text">Шумо нақши худро тағйир дода наметавонед.</div>
+                        {% endif %}
                     </div>
                     
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-check-circle me-2"></i>Сохтан
+                            <i class="bi bi-check-circle me-2"></i>{% if user %}Нигоҳ доштан{% else %}Сохтан{% endif %}
                         </button>
                         <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-2"></i>Бозгашт

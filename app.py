@@ -16,6 +16,19 @@ def migrate_add_topic_color():
     except Exception as e:
         print(f'Migration check: {e}')
 
+def migrate_add_user_full_name():
+    from sqlalchemy import text, inspect
+    try:
+        inspector = inspect(db.engine)
+        if 'users' in inspector.get_table_names():
+            columns = [col['name'] for col in inspector.get_columns('users')]
+            if 'full_name' not in columns:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR(150)"))
+                db.session.commit()
+                print('Migration: Added full_name column to users table')
+    except Exception as e:
+        print(f'Migration check: {e}')
+
 def create_default_admin():
     from models import User
     admin = User.query.filter_by(username='admin').first()
@@ -79,6 +92,7 @@ def create_app():
     with app.app_context():
         db.create_all()
         migrate_add_topic_color()
+        migrate_add_user_full_name()
         create_default_admin()
     
     return app

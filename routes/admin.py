@@ -147,12 +147,17 @@ def users():
 def create_user():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
+        full_name = request.form.get('full_name', '').strip()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         role = request.form.get('role', 'user')
         
         if not username or not password:
             flash('Номи корбар ва рамз лозим аст.', 'danger')
+            return render_template('admin/user_form.html', user=None)
+        
+        if not full_name:
+            flash('Номи пурра (ФИО) лозим аст.', 'danger')
             return render_template('admin/user_form.html', user=None)
         
         if len(password) < 6:
@@ -171,15 +176,64 @@ def create_user():
         if role not in ['user', 'admin']:
             role = 'user'
         
-        user = User(username=username, role=role)
+        user = User(username=username, full_name=full_name, role=role)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
         
-        flash('Корбар бо муваффақият илова карда шуд.', 'success')
         return redirect(url_for('admin.users'))
     
     return render_template('admin/user_form.html', user=None)
+
+@admin_bp.route('/users/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_user(id):
+    user = User.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        role = request.form.get('role', 'user')
+        
+        if not username:
+            flash('Номи корбар лозим аст.', 'danger')
+            return render_template('admin/user_form.html', user=user)
+        
+        if not full_name:
+            flash('Номи пурра (ФИО) лозим аст.', 'danger')
+            return render_template('admin/user_form.html', user=user)
+        
+        existing_user = User.query.filter(User.username == username, User.id != id).first()
+        if existing_user:
+            flash('Ин номи корбар аллакай истифода шудааст.', 'danger')
+            return render_template('admin/user_form.html', user=user)
+        
+        if password:
+            if len(password) < 6:
+                flash('Рамз бояд ҳадди ақал 6 аломат дошта бошад.', 'danger')
+                return render_template('admin/user_form.html', user=user)
+            
+            if password != confirm_password:
+                flash('Рамзҳо мувофиқат намекунанд.', 'danger')
+                return render_template('admin/user_form.html', user=user)
+            
+            user.set_password(password)
+        
+        if user.id != current_user.id:
+            if role not in ['user', 'admin']:
+                role = 'user'
+            user.role = role
+        
+        user.username = username
+        user.full_name = full_name
+        db.session.commit()
+        
+        return redirect(url_for('admin.users'))
+    
+    return render_template('admin/user_form.html', user=user)
 
 @admin_bp.route('/users/<int:id>/delete', methods=['POST'])
 @login_required
@@ -191,14 +245,25 @@ def delete_user(id):
         flash('Шумо худро нест карда наметавонед.', 'danger')
         return redirect(url_for('admin.users'))
     
+    delete_with_requests = request.form.get('delete_requests') == 'yes'
+    
     if user.requests:
-        flash('Ин корбарро нест кардан мумкин нест, зеро дархостҳо доранд.', 'danger')
-        return redirect(url_for('admin.users'))
+        if delete_with_requests:
+            for req in user.requests:
+                if req.media_filename:
+                    import os
+                    from flask import current_app
+                    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], req.media_filename)
+                    if os.path.exists(filepath):
+                        os.remove(filepath)
+                db.session.delete(req)
+        else:
+            flash('Барои нест кардани корбар бо дархостҳо, интихоби "Бо дархостҳо" лозим аст.', 'warning')
+            return redirect(url_for('admin.users'))
     
     db.session.delete(user)
     db.session.commit()
     
-    flash('Корбар бо муваффақият нест карда шуд.', 'success')
     return redirect(url_for('admin.users'))
 
 @admin_bp.route('/map')
