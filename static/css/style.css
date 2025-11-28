@@ -7,8 +7,8 @@
     --bg-card: #ffffff;
     --text-dark: #1e293b;
     --border-color: #cbd5e1;
-    --accent-color: #dc2626;
-    --accent-hover: #b91c1c;
+    --accent-color: #0891b2;
+    --accent-hover: #0e7490;
 }
 
 html, body {
@@ -29,12 +29,14 @@ main {
 }
 
 .navbar {
-    background: linear-gradient(135deg, #4a5568 0%, #64748b 50%, #475569 100%) !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 50%, #9ca3af 100%) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-brand {
     font-size: 1.1rem;
+    color: #1e293b !important;
+    font-weight: 600;
 }
 
 @media (max-width: 576px) {
@@ -289,7 +291,7 @@ a:hover {
     margin: 0 0.25rem;
     transition: all 0.2s ease;
     font-weight: 500;
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    box-shadow: 0 2px 8px rgba(8, 145, 178, 0.3);
     border: 2px solid var(--accent-color);
 }
 
@@ -298,7 +300,7 @@ a:hover {
     border-color: var(--accent-hover);
     color: #fff !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.4);
 }
 
 .navbar-nav .dropdown-toggle {
