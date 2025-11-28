@@ -47,8 +47,10 @@
                             <i class="bi bi-pin-map me-1"></i>
                             <span id="locationCoords"></span>
                         </div>
-                        <div id="locationMapContainer" class="mt-3 d-none">
-                            <div id="locationMap" style="height: 250px; width: 100%; border-radius: 8px; position: relative; z-index: 1;"></div>
+                        <div id="locationMapWrapper" class="mt-3">
+                            <div id="locationMap" style="height: 250px; width: 100%; border-radius: 8px; background: #e9f5ec; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color);">
+                                <span class="text-muted" id="mapPlaceholder"><i class="bi bi-map me-2"></i>Пас аз муайян кардани ҷойгиршавӣ харита пайдо мешавад</span>
+                            </div>
                         </div>
                         <div id="locationError" class="mt-2 text-danger small d-none"></div>
                     </div>
@@ -108,6 +110,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const locationCoords = document.getElementById('locationCoords');
     const locationError = document.getElementById('locationError');
     
+    let mapInitialized = false;
+    
     getLocationBtn.addEventListener('click', function() {
         if (!navigator.geolocation) {
             locationError.textContent = 'Браузери шумо геолокацияро дастгирӣ намекунад.';
@@ -118,9 +122,13 @@ document.addEventListener('DOMContentLoaded', function() {
         getLocationBtn.disabled = true;
         getLocationBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Ҷустуҷӯ...';
         locationError.classList.add('d-none');
+        mapInitialized = false;
         
         navigator.geolocation.getCurrentPosition(
             function(position) {
+                if (mapInitialized) return;
+                mapInitialized = true;
+                
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 
@@ -131,31 +139,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 locationInfo.classList.remove('d-none');
                 locationCoords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                 
-                // Show map container first
-                const mapContainer = document.getElementById('locationMapContainer');
-                mapContainer.classList.remove('d-none');
-                mapContainer.style.display = 'block';
+                // Initialize map
+                const mapElement = document.getElementById('locationMap');
+                const placeholder = document.getElementById('mapPlaceholder');
                 
-                // Initialize map after a delay to ensure container is visible
+                // Remove placeholder
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                
+                // Reset map container styles for Leaflet
+                mapElement.style.display = 'block';
+                mapElement.style.alignItems = '';
+                mapElement.style.justifyContent = '';
+                mapElement.style.border = 'none';
+                mapElement.style.background = '';
+                
+                // Destroy existing map if any
+                if (window.locationMap) {
+                    window.locationMap.remove();
+                    window.locationMap = null;
+                }
+                
+                // Small delay then create map
                 setTimeout(function() {
-                    const mapElement = document.getElementById('locationMap');
-                    
-                    // Destroy existing map if any
-                    if (window.locationMap) {
-                        window.locationMap.remove();
-                        window.locationMap = null;
-                    }
-                    
-                    // Clear any existing content
-                    mapElement.innerHTML = '';
-                    
                     try {
-                        // Create map
-                        window.locationMap = L.map('locationMap', {
-                            center: [lat, lng],
-                            zoom: 15,
-                            zoomControl: true
-                        });
+                        window.locationMap = L.map('locationMap').setView([lat, lng], 15);
                         
                         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                             attribution: '&copy; OpenStreetMap',
@@ -166,16 +175,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             .bindPopup('Ҷойгиршавии шумо')
                             .openPopup();
                         
-                        // Multiple invalidateSize calls to ensure proper rendering
                         window.locationMap.invalidateSize();
-                        setTimeout(function() { window.locationMap.invalidateSize(); }, 200);
-                        setTimeout(function() { window.locationMap.invalidateSize(); }, 500);
-                        setTimeout(function() { window.locationMap.invalidateSize(); }, 1000);
+                        setTimeout(function() { window.locationMap.invalidateSize(); }, 300);
                     } catch (e) {
                         console.error('Map error:', e);
-                        mapElement.innerHTML = '<div class="alert alert-warning">Харита бор нашуд</div>';
                     }
-                }, 200);
+                }, 100);
                 
                 getLocationBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Ҷойгиршавӣ муайян шуд';
                 getLocationBtn.classList.remove('btn-outline-success');
