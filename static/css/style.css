@@ -1,12 +1,14 @@
 :root {
-    --primary-color: #2d6a4f;
-    --primary-light: #40916c;
-    --primary-dark: #1b4332;
-    --secondary-color: #52796f;
-    --bg-light: #e9f5ec;
-    --bg-card: #f8faf9;
-    --text-dark: #1b4332;
-    --border-color: #b7e4c7;
+    --primary-color: #4a5568;
+    --primary-light: #718096;
+    --primary-dark: #2d3748;
+    --secondary-color: #64748b;
+    --bg-light: #f1f5f9;
+    --bg-card: #ffffff;
+    --text-dark: #1e293b;
+    --border-color: #cbd5e1;
+    --accent-color: #dc2626;
+    --accent-hover: #b91c1c;
 }
 
 html, body {
@@ -27,7 +29,8 @@ main {
 }
 
 .navbar {
-    background-color: var(--primary-color) !important;
+    background: linear-gradient(135deg, #4a5568 0%, #64748b 50%, #475569 100%) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .navbar-brand {
@@ -48,13 +51,13 @@ main {
 }
 
 .card-header {
-    background-color: #f0f7f2;
+    background-color: #f8fafc;
     border-bottom: 1px solid var(--border-color);
     border-radius: 12px 12px 0 0 !important;
 }
 
 .card-header.bg-primary {
-    background-color: var(--primary-color) !important;
+    background: linear-gradient(135deg, #4a5568 0%, #64748b 100%) !important;
 }
 
 .btn {
@@ -167,15 +170,15 @@ main {
     font-size: 0.85rem;
     letter-spacing: 0.5px;
     color: var(--secondary-color);
-    background-color: #f0f7f2;
+    background-color: #f8fafc;
 }
 
 .table-hover tbody tr:hover {
-    background-color: rgba(45, 106, 79, 0.06);
+    background-color: rgba(100, 116, 139, 0.08);
 }
 
 .table-light {
-    background-color: #f0f7f2 !important;
+    background-color: #f8fafc !important;
 }
 
 .alert {
@@ -211,7 +214,7 @@ main {
 }
 
 .modal-header {
-    background-color: #f0f7f2;
+    background-color: #f8fafc;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -231,7 +234,7 @@ main {
 }
 
 .dropdown-item:hover {
-    background-color: rgba(45, 106, 79, 0.1);
+    background-color: rgba(100, 116, 139, 0.1);
     color: var(--primary-color);
 }
 
@@ -241,7 +244,7 @@ main {
 }
 
 .footer {
-    background-color: #f0f7f2;
+    background-color: #f8fafc;
     border-top: 1px solid var(--border-color);
 }
 
@@ -257,7 +260,7 @@ main {
 
 .leaflet-container {
     border-radius: 8px;
-    background: #f0f7f2;
+    background: #f1f5f9;
 }
 
 .text-truncate {
@@ -280,27 +283,27 @@ a:hover {
 
 .navbar-nav .nav-link {
     color: #fff !important;
-    background-color: #e07b39;
+    background-color: var(--accent-color);
     border-radius: 8px;
     padding: 0.5rem 1.25rem !important;
     margin: 0 0.25rem;
     transition: all 0.2s ease;
     font-weight: 500;
-    box-shadow: 0 2px 8px rgba(224, 123, 57, 0.3);
-    border: 2px solid #e07b39;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    border: 2px solid var(--accent-color);
 }
 
 .navbar-nav .nav-link:hover {
-    background-color: #c96a2e;
-    border-color: #c96a2e;
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
     color: #fff !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(224, 123, 57, 0.4);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
 }
 
 .navbar-nav .dropdown-toggle {
-    background-color: #e07b39;
-    border-color: #e07b39;
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 @media (max-width: 768px) {
