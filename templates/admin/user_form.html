@@ -28,8 +28,7 @@
                                id="full_name" 
                                name="full_name" 
                                required
-                               value="{{ user.full_name if user and user.full_name else '' }}"
-                               placeholder="Фамилия Ном Падар">
+                               value="{{ user.full_name if user and user.full_name else '' }}">
                     </div>
                     
                     <div class="mb-4">
@@ -41,8 +40,7 @@
                                id="username" 
                                name="username" 
                                required
-                               value="{{ user.username if user else '' }}"
-                               placeholder="Номи корбарро ворид кунед">
+                               value="{{ user.username if user else '' }}">
                     </div>
                     
                     <div class="mb-4">
@@ -54,8 +52,7 @@
                                id="password" 
                                name="password" 
                                {% if not user %}required{% endif %}
-                               minlength="6"
-                               placeholder="{% if user %}Барои тағйир додан ворид кунед{% else %}Ҳадди ақал 6 аломат{% endif %}">
+                               minlength="6">
                         {% if user %}
                         <div class="form-text">Агар рамзро тағйир додан нахоҳед, холӣ гузоред.</div>
                         {% endif %}
@@ -69,8 +66,7 @@
                                class="form-control form-control-lg" 
                                id="confirm_password" 
                                name="confirm_password" 
-                               {% if not user %}required{% endif %}
-                               placeholder="Рамзро такрор кунед">
+                               {% if not user %}required{% endif %}>
                     </div>
                     
                     <div class="mb-4">
