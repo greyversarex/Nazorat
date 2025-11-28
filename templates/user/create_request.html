@@ -39,20 +39,18 @@
                                     class="btn btn-outline-success btn-lg flex-grow-1">
                                 <i class="bi bi-crosshair me-2"></i>Муайян кардани ҷойгиршавӣ
                             </button>
-                            <span id="locationStatus" class="d-none">
+                            <span id="locationStatus" style="display: none;">
                                 <i class="bi bi-check-circle-fill text-success fs-3"></i>
                             </span>
                         </div>
-                        <div id="locationInfo" class="mt-2 small text-muted d-none">
+                        <div id="locationInfo" class="mt-2 small text-muted" style="display: none;">
                             <i class="bi bi-pin-map me-1"></i>
                             <span id="locationCoords"></span>
                         </div>
-                        <div id="locationMapWrapper" class="mt-3">
-                            <div id="locationMap" style="height: 250px; width: 100%; border-radius: 8px; background: #e9f5ec; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color);">
-                                <span class="text-muted" id="mapPlaceholder"><i class="bi bi-map me-2"></i>Пас аз муайян кардани ҷойгиршавӣ харита пайдо мешавад</span>
-                            </div>
+                        <div id="locationMapBox" class="mt-3" style="display: none;">
+                            <div id="locationMap" style="height: 250px; width: 100%; border-radius: 8px;"></div>
                         </div>
-                        <div id="locationError" class="mt-2 text-danger small d-none"></div>
+                        <div id="locationError" class="mt-2 text-danger small" style="display: none;"></div>
                     </div>
                     
                     <div class="mb-4">
@@ -78,9 +76,9 @@
                         <div class="form-text">
                             Форматҳои иҷозатшуда: PNG, JPG, GIF, MP4, MOV, AVI, WEBM (ҳадди аксар 50MB)
                         </div>
-                        <div id="mediaPreview" class="mt-2 d-none">
-                            <img id="imagePreview" class="img-thumbnail d-none" style="max-height: 200px;">
-                            <video id="videoPreview" class="d-none" style="max-height: 200px;" controls></video>
+                        <div id="mediaPreview" class="mt-2" style="display: none;">
+                            <img id="imagePreview" class="img-thumbnail" style="max-height: 200px; display: none;">
+                            <video id="videoPreview" style="max-height: 200px; display: none;" controls></video>
                         </div>
                     </div>
                     
@@ -101,145 +99,116 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const getLocationBtn = document.getElementById('getLocationBtn');
-    const latitudeInput = document.getElementById('latitude');
-    const longitudeInput = document.getElementById('longitude');
-    const locationStatus = document.getElementById('locationStatus');
-    const locationInfo = document.getElementById('locationInfo');
-    const locationCoords = document.getElementById('locationCoords');
-    const locationError = document.getElementById('locationError');
+(function() {
+    var map = null;
+    var mapReady = false;
     
-    let mapInitialized = false;
-    
-    getLocationBtn.addEventListener('click', function() {
-        if (!navigator.geolocation) {
-            locationError.textContent = 'Браузери шумо геолокацияро дастгирӣ намекунад.';
-            locationError.classList.remove('d-none');
-            return;
+    function initMap(lat, lng) {
+        var container = document.getElementById('locationMapBox');
+        var mapDiv = document.getElementById('locationMap');
+        
+        container.style.display = 'block';
+        
+        if (map) {
+            map.remove();
+            map = null;
         }
         
-        getLocationBtn.disabled = true;
-        getLocationBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Ҷустуҷӯ...';
-        locationError.classList.add('d-none');
-        mapInitialized = false;
+        mapDiv.innerHTML = '';
         
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                if (mapInitialized) return;
-                mapInitialized = true;
-                
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                
-                latitudeInput.value = lat;
-                longitudeInput.value = lng;
-                
-                locationStatus.classList.remove('d-none');
-                locationInfo.classList.remove('d-none');
-                locationCoords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                
-                // Initialize map
-                const mapElement = document.getElementById('locationMap');
-                const placeholder = document.getElementById('mapPlaceholder');
-                
-                // Remove placeholder
-                if (placeholder) {
-                    placeholder.remove();
-                }
-                
-                // Reset map container styles for Leaflet
-                mapElement.style.display = 'block';
-                mapElement.style.alignItems = '';
-                mapElement.style.justifyContent = '';
-                mapElement.style.border = 'none';
-                mapElement.style.background = '';
-                
-                // Destroy existing map if any
-                if (window.locationMap) {
-                    window.locationMap.remove();
-                    window.locationMap = null;
-                }
-                
-                // Small delay then create map
-                setTimeout(function() {
-                    try {
-                        window.locationMap = L.map('locationMap').setView([lat, lng], 15);
-                        
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '&copy; OpenStreetMap',
-                            maxZoom: 19
-                        }).addTo(window.locationMap);
-                        
-                        L.marker([lat, lng]).addTo(window.locationMap)
-                            .bindPopup('Ҷойгиршавии шумо')
-                            .openPopup();
-                        
-                        window.locationMap.invalidateSize();
-                        setTimeout(function() { window.locationMap.invalidateSize(); }, 300);
-                    } catch (e) {
-                        console.error('Map error:', e);
-                    }
-                }, 100);
-                
-                getLocationBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Ҷойгиршавӣ муайян шуд';
-                getLocationBtn.classList.remove('btn-outline-success');
-                getLocationBtn.classList.add('btn-success');
-                getLocationBtn.disabled = false;
-            },
-            function(error) {
-                getLocationBtn.disabled = false;
-                getLocationBtn.innerHTML = '<i class="bi bi-crosshair me-2"></i>Муайян кардани ҷойгиршавӣ';
-                
-                let errorMessage = 'Хато дар гирифтани ҷойгиршавӣ.';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage = 'Дастрасӣ ба ҷойгиршавӣ рад карда шуд. Лутфан иҷозат диҳед.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage = 'Маълумоти ҷойгиршавӣ дастнорас аст.';
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage = 'Вақти дархости ҷойгиршавӣ гузашт.';
-                        break;
-                }
-                locationError.textContent = errorMessage;
-                locationError.classList.remove('d-none');
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
+        setTimeout(function() {
+            map = L.map('locationMap').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+            L.marker([lat, lng]).addTo(map).bindPopup('Ҷойгиршавии шумо').openPopup();
+            
+            map.invalidateSize();
+            setTimeout(function() { map.invalidateSize(); }, 300);
+        }, 50);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('getLocationBtn');
+        var latInput = document.getElementById('latitude');
+        var lngInput = document.getElementById('longitude');
+        var status = document.getElementById('locationStatus');
+        var info = document.getElementById('locationInfo');
+        var coords = document.getElementById('locationCoords');
+        var error = document.getElementById('locationError');
+        
+        btn.onclick = function() {
+            if (!navigator.geolocation) {
+                error.textContent = 'Браузери шумо геолокацияро дастгирӣ намекунад.';
+                error.style.display = 'block';
+                return;
             }
-        );
-    });
-    
-    const mediaInput = document.getElementById('media');
-    const mediaPreview = document.getElementById('mediaPreview');
-    const imagePreview = document.getElementById('imagePreview');
-    const videoPreview = document.getElementById('videoPreview');
-    
-    mediaInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) {
-            mediaPreview.classList.add('d-none');
-            return;
-        }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Ҷустуҷӯ...';
+            error.style.display = 'none';
+            
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    
+                    latInput.value = lat;
+                    lngInput.value = lng;
+                    
+                    status.style.display = 'inline';
+                    info.style.display = 'block';
+                    coords.textContent = lat.toFixed(6) + ', ' + lng.toFixed(6);
+                    
+                    initMap(lat, lng);
+                    
+                    btn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Ҷойгиршавӣ муайян шуд';
+                    btn.className = 'btn btn-success btn-lg flex-grow-1';
+                    btn.disabled = false;
+                },
+                function(err) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-crosshair me-2"></i>Муайян кардани ҷойгиршавӣ';
+                    
+                    var msg = 'Хато дар гирифтани ҷойгиршавӣ.';
+                    if (err.code === 1) msg = 'Дастрасӣ ба ҷойгиршавӣ рад карда шуд.';
+                    if (err.code === 2) msg = 'Маълумоти ҷойгиршавӣ дастнорас аст.';
+                    if (err.code === 3) msg = 'Вақти дархост гузашт.';
+                    
+                    error.textContent = msg;
+                    error.style.display = 'block';
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        };
         
-        const url = URL.createObjectURL(file);
+        var mediaInput = document.getElementById('media');
+        var mediaPreview = document.getElementById('mediaPreview');
+        var imgPreview = document.getElementById('imagePreview');
+        var vidPreview = document.getElementById('videoPreview');
         
-        if (file.type.startsWith('image/')) {
-            imagePreview.src = url;
-            imagePreview.classList.remove('d-none');
-            videoPreview.classList.add('d-none');
-            mediaPreview.classList.remove('d-none');
-        } else if (file.type.startsWith('video/')) {
-            videoPreview.src = url;
-            videoPreview.classList.remove('d-none');
-            imagePreview.classList.add('d-none');
-            mediaPreview.classList.remove('d-none');
-        }
+        mediaInput.onchange = function(e) {
+            var file = e.target.files[0];
+            if (!file) {
+                mediaPreview.style.display = 'none';
+                return;
+            }
+            
+            var url = URL.createObjectURL(file);
+            
+            if (file.type.indexOf('image') === 0) {
+                imgPreview.src = url;
+                imgPreview.style.display = 'block';
+                vidPreview.style.display = 'none';
+                mediaPreview.style.display = 'block';
+            } else if (file.type.indexOf('video') === 0) {
+                vidPreview.src = url;
+                vidPreview.style.display = 'block';
+                imgPreview.style.display = 'none';
+                mediaPreview.style.display = 'block';
+            }
+        };
     });
-});
+})();
 </script>
 {% endblock %}
