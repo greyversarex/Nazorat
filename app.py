@@ -2,6 +2,33 @@ import os
 from flask import Flask
 from extensions import db, bcrypt, login_manager, csrf
 
+def migrate_add_topic_color():
+    from sqlalchemy import text, inspect
+    try:
+        inspector = inspect(db.engine)
+        if 'topics' in inspector.get_table_names():
+            columns = [col['name'] for col in inspector.get_columns('topics')]
+            if 'color' not in columns:
+                db.session.execute(text("ALTER TABLE topics ADD COLUMN color VARCHAR(7) DEFAULT '#40916c'"))
+                db.session.execute(text("UPDATE topics SET color = '#40916c' WHERE color IS NULL"))
+                db.session.commit()
+                print('Migration: Added color column to topics table')
+    except Exception as e:
+        print(f'Migration check: {e}')
+
+def create_default_admin():
+    from models import User
+    admin = User.query.filter_by(username='admin').first()
+    if not admin:
+        admin = User(
+            username='admin',
+            role='admin'
+        )
+        admin.set_password('admin123')
+        db.session.add(admin)
+        db.session.commit()
+        print('Default admin created: username=admin, password=admin123')
+
 def create_app():
     app = Flask(__name__)
     
@@ -51,22 +78,10 @@ def create_app():
     
     with app.app_context():
         db.create_all()
+        migrate_add_topic_color()
         create_default_admin()
     
     return app
-
-def create_default_admin():
-    from models import User
-    admin = User.query.filter_by(username='admin').first()
-    if not admin:
-        admin = User(
-            username='admin',
-            role='admin'
-        )
-        admin.set_password('admin123')
-        db.session.add(admin)
-        db.session.commit()
-        print('Default admin created: username=admin, password=admin123')
 
 app = create_app()
 
