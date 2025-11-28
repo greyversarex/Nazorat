@@ -148,8 +148,16 @@ main {
 
 .table {
     border-radius: 12px;
-    overflow: hidden;
     background-color: var(--bg-card);
+}
+
+.table-responsive {
+    overflow: visible !important;
+}
+
+.btn-group .dropdown-menu {
+    position: absolute;
+    z-index: 1050;
 }
 
 .table thead th {
