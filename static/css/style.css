@@ -59,7 +59,7 @@ main {
 }
 
 .card-header.bg-primary {
-    background: linear-gradient(135deg, #4a5568 0%, #64748b 100%) !important;
+    background-color: var(--accent-color) !important;
 }
 
 .btn {
