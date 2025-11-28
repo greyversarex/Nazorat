@@ -131,25 +131,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 locationInfo.classList.remove('d-none');
                 locationCoords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                 
-                // Show map
+                // Show map container first
                 const mapContainer = document.getElementById('locationMapContainer');
-                const mapElement = document.getElementById('locationMap');
                 mapContainer.classList.remove('d-none');
+                mapContainer.style.display = 'block';
                 
-                // Destroy existing map if any
-                if (window.locationMap) {
-                    window.locationMap.remove();
-                    window.locationMap = null;
-                }
-                
-                // Wait for container to be fully visible
-                requestAnimationFrame(function() {
-                    requestAnimationFrame(function() {
-                        // Create fresh map
-                        window.locationMap = L.map(mapElement).setView([lat, lng], 15);
+                // Initialize map after a delay to ensure container is visible
+                setTimeout(function() {
+                    const mapElement = document.getElementById('locationMap');
+                    
+                    // Destroy existing map if any
+                    if (window.locationMap) {
+                        window.locationMap.remove();
+                        window.locationMap = null;
+                    }
+                    
+                    // Clear any existing content
+                    mapElement.innerHTML = '';
+                    
+                    try {
+                        // Create map
+                        window.locationMap = L.map('locationMap', {
+                            center: [lat, lng],
+                            zoom: 15,
+                            zoomControl: true
+                        });
                         
-                        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap',
                             maxZoom: 19
                         }).addTo(window.locationMap);
                         
@@ -157,16 +166,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             .bindPopup('Ҷойгиршавии шумо')
                             .openPopup();
                         
-                        // Force resize after map is created
-                        setTimeout(function() {
-                            window.locationMap.invalidateSize();
-                        }, 100);
-                        
-                        setTimeout(function() {
-                            window.locationMap.invalidateSize();
-                        }, 500);
-                    });
-                });
+                        // Multiple invalidateSize calls to ensure proper rendering
+                        window.locationMap.invalidateSize();
+                        setTimeout(function() { window.locationMap.invalidateSize(); }, 200);
+                        setTimeout(function() { window.locationMap.invalidateSize(); }, 500);
+                        setTimeout(function() { window.locationMap.invalidateSize(); }, 1000);
+                    } catch (e) {
+                        console.error('Map error:', e);
+                        mapElement.innerHTML = '<div class="alert alert-warning">Харита бор нашуд</div>';
+                    }
+                }, 200);
                 
                 getLocationBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Ҷойгиршавӣ муайян шуд';
                 getLocationBtn.classList.remove('btn-outline-success');
