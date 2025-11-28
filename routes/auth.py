@@ -32,7 +32,6 @@ def login():
         
         if user and user.check_password(password):
             login_user(user)
-            flash('Шумо бо муваффақият ворид шудед!', 'success')
             
             next_page = request.args.get('next')
             if next_page and is_safe_url(next_page):
@@ -50,5 +49,4 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('Шумо аз система баромадед.', 'info')
     return redirect(url_for('auth.login'))
