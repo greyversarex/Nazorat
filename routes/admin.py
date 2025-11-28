@@ -245,10 +245,10 @@ def delete_user(id):
         flash('Шумо худро нест карда наметавонед.', 'danger')
         return redirect(url_for('admin.users'))
     
-    delete_with_requests = request.form.get('delete_requests') == 'yes'
+    delete_option = request.form.get('delete_option', 'none')
     
     if user.requests:
-        if delete_with_requests:
+        if delete_option == 'with_requests':
             for req in user.requests:
                 if req.media_filename:
                     import os
@@ -257,8 +257,11 @@ def delete_user(id):
                     if os.path.exists(filepath):
                         os.remove(filepath)
                 db.session.delete(req)
+        elif delete_option == 'keep_requests':
+            for req in user.requests:
+                req.user_id = None
         else:
-            flash('Барои нест кардани корбар бо дархостҳо, интихоби "Бо дархостҳо" лозим аст.', 'warning')
+            flash('Интихоб кунед: бо дархостҳо ё бидуни онҳо.', 'warning')
             return redirect(url_for('admin.users'))
     
     db.session.delete(user)
@@ -288,7 +291,7 @@ def admin_map():
             'status': req.status,
             'status_label': req.get_status_label(),
             'comment': req.comment or '',
-            'author': req.author.username,
+            'author': req.author.username if req.author else 'Нест шуд',
             'created_at': req.created_at.strftime('%d.%m.%Y %H:%M')
         })
     

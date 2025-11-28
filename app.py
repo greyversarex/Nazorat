@@ -29,6 +29,37 @@ def migrate_add_user_full_name():
     except Exception as e:
         print(f'Migration check: {e}')
 
+def migrate_nullable_user_id():
+    from sqlalchemy import text, inspect
+    try:
+        inspector = inspect(db.engine)
+        if 'requests' in inspector.get_table_names():
+            columns = inspector.get_columns('requests')
+            for col in columns:
+                if col['name'] == 'user_id':
+                    if col.get('nullable') == False:
+                        db.session.execute(text("""
+                            CREATE TABLE requests_new (
+                                id INTEGER PRIMARY KEY,
+                                user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                                topic_id INTEGER NOT NULL REFERENCES topics(id),
+                                latitude REAL,
+                                longitude REAL,
+                                comment TEXT,
+                                media_filename VARCHAR(255),
+                                status VARCHAR(20) NOT NULL DEFAULT 'new',
+                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                            )
+                        """))
+                        db.session.execute(text("INSERT INTO requests_new SELECT * FROM requests"))
+                        db.session.execute(text("DROP TABLE requests"))
+                        db.session.execute(text("ALTER TABLE requests_new RENAME TO requests"))
+                        db.session.commit()
+                        print('Migration: Made user_id nullable in requests table')
+                    break
+    except Exception as e:
+        print(f'Migration nullable user_id check: {e}')
+
 def create_default_admin():
     from models import User
     admin = User.query.filter_by(username='admin').first()
@@ -93,6 +124,7 @@ def create_app():
         db.create_all()
         migrate_add_topic_color()
         migrate_add_user_full_name()
+        migrate_nullable_user_id()
         create_default_admin()
     
     return app

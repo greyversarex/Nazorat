@@ -70,7 +70,7 @@
                 <td>
                     <span class="badge bg-secondary">{{ req.topic.title }}</span>
                 </td>
-                <td>{{ req.author.username }}</td>
+                <td>{% if req.author %}{{ req.author.username }}{% else %}<span class="text-muted fst-italic">Нест шуд</span>{% endif %}</td>
                 <td class="text-truncate" style="max-width: 200px;">
                     {{ req.comment[:50] }}{% if req.comment|length > 50 %}...{% endif %}
                 </td>
