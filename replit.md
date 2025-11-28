@@ -1,4 +1,4 @@
-# Systemi Darkhostho - Request Management System
+# Nazorat - Request Management System
 
 ## Overview
 A Progressive Web Application (PWA) for managing citizen requests/tickets. Built with Python Flask, SQLAlchemy, and Bootstrap 5. The interface is fully localized in Tajik language.

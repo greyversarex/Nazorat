@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2d6a4f">
-    <meta name="description" content="Systemi Darkhostho - Системаи идоракунии дархостҳо">
+    <meta name="description" content="Nazorat - Системаи идоракунии дархостҳо">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Darkhostho">
+    <meta name="apple-mobile-web-app-title" content="Nazorat">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-    <title>{% block title %}Systemi Darkhostho{% endblock %}</title>
+    <title>{% block title %}Nazorat{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -22,7 +22,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">
-                <img src="/static/icons/camera-logo.png" alt="Logo" height="32" class="me-2">Systemi Darkhostho
+                <img src="/static/icons/camera-logo.png" alt="Logo" height="32" class="me-2">Nazorat
             </a>
             {% if current_user.is_authenticated %}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

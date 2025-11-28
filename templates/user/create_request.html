@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Дархости нав - Systemi Darkhostho{% endblock %}
+{% block title %}Дархости нав - Nazorat{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -64,20 +64,63 @@
                     </div>
                     
                     <div class="mb-4">
-                        <label for="media" class="form-label">
+                        <label class="form-label">
                             <i class="bi bi-paperclip me-1"></i>Расм ё видео
                         </label>
-                        <input type="file" 
-                               class="form-control form-control-lg" 
-                               id="media" 
-                               name="media"
-                               accept="image/*,video/*">
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-md-4">
+                                <label class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3" for="cameraInput">
+                                    <i class="bi bi-camera-fill fs-3 mb-1"></i>
+                                    <span class="small">Расм гирифтан</span>
+                                </label>
+                                <input type="file" 
+                                       class="d-none media-input" 
+                                       id="cameraInput" 
+                                       accept="image/*"
+                                       capture="environment">
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="btn btn-outline-danger w-100 d-flex flex-column align-items-center py-3" for="videoInput">
+                                    <i class="bi bi-camera-video-fill fs-3 mb-1"></i>
+                                    <span class="small">Видео гирифтан</span>
+                                </label>
+                                <input type="file" 
+                                       class="d-none media-input" 
+                                       id="videoInput" 
+                                       accept="video/*"
+                                       capture="environment">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="btn btn-outline-secondary w-100 d-flex flex-column align-items-center py-3" for="fileInput">
+                                    <i class="bi bi-folder2-open fs-3 mb-1"></i>
+                                    <span class="small">Аз файлҳо</span>
+                                </label>
+                                <input type="file" 
+                                       class="d-none media-input" 
+                                       id="fileInput" 
+                                       accept="image/*,video/*,.pdf,.doc,.docx">
+                            </div>
+                        </div>
+                        
+                        <input type="file" class="d-none" id="media" name="media" accept="image/*,video/*,.pdf,.doc,.docx">
+                        
                         <div class="form-text">
-                            Форматҳои иҷозатшуда: PNG, JPG, GIF, MP4, MOV, AVI, WEBM (ҳадди аксар 50MB)
+                            Форматҳои иҷозатшуда: PNG, JPG, GIF, MP4, MOV, AVI, WEBM, PDF, DOC (ҳадди аксар 50MB)
                         </div>
                         <div id="mediaPreview" class="mt-2" style="display: none;">
-                            <img id="imagePreview" class="img-thumbnail" style="max-height: 200px; display: none;">
-                            <video id="videoPreview" style="max-height: 200px; display: none;" controls></video>
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="flex-grow-1">
+                                    <img id="imagePreview" class="img-thumbnail" style="max-height: 200px; display: none;">
+                                    <video id="videoPreview" style="max-height: 200px; display: none;" controls></video>
+                                    <div id="filePreview" class="alert alert-secondary py-2" style="display: none;">
+                                        <i class="bi bi-file-earmark me-2"></i><span id="fileName"></span>
+                                    </div>
+                                </div>
+                                <button type="button" id="clearMediaBtn" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -181,31 +224,64 @@
             );
         };
         
-        var mediaInput = document.getElementById('media');
+        var mainMediaInput = document.getElementById('media');
         var mediaPreview = document.getElementById('mediaPreview');
         var imgPreview = document.getElementById('imagePreview');
         var vidPreview = document.getElementById('videoPreview');
+        var filePreview = document.getElementById('filePreview');
+        var fileName = document.getElementById('fileName');
+        var clearMediaBtn = document.getElementById('clearMediaBtn');
+        var mediaInputs = document.querySelectorAll('.media-input');
         
-        mediaInput.onchange = function(e) {
-            var file = e.target.files[0];
+        function showPreview(file) {
             if (!file) {
-                mediaPreview.style.display = 'none';
+                hidePreview();
                 return;
             }
             
             var url = URL.createObjectURL(file);
             
+            imgPreview.style.display = 'none';
+            vidPreview.style.display = 'none';
+            filePreview.style.display = 'none';
+            
             if (file.type.indexOf('image') === 0) {
                 imgPreview.src = url;
                 imgPreview.style.display = 'block';
-                vidPreview.style.display = 'none';
-                mediaPreview.style.display = 'block';
             } else if (file.type.indexOf('video') === 0) {
                 vidPreview.src = url;
                 vidPreview.style.display = 'block';
-                imgPreview.style.display = 'none';
-                mediaPreview.style.display = 'block';
+            } else {
+                fileName.textContent = file.name;
+                filePreview.style.display = 'block';
             }
+            
+            mediaPreview.style.display = 'block';
+        }
+        
+        function hidePreview() {
+            mediaPreview.style.display = 'none';
+            imgPreview.style.display = 'none';
+            vidPreview.style.display = 'none';
+            filePreview.style.display = 'none';
+            mainMediaInput.value = '';
+        }
+        
+        mediaInputs.forEach(function(input) {
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                if (file) {
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    mainMediaInput.files = dt.files;
+                    showPreview(file);
+                }
+            };
+        });
+        
+        clearMediaBtn.onclick = function() {
+            hidePreview();
+            mediaInputs.forEach(function(input) { input.value = ''; });
         };
     });
 })();
