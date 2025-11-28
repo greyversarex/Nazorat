@@ -30,6 +30,7 @@ class Topic(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
+    color = db.Column(db.String(7), nullable=False, default='#40916c')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     requests = db.relationship('Request', backref='topic', lazy=True)

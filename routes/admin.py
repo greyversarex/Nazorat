@@ -54,6 +54,7 @@ def topics():
 def create_topic():
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
+        color = request.form.get('color', '#40916c').strip()
         
         if not title:
             flash('Номи мавзӯъ лозим аст.', 'danger')
@@ -64,7 +65,7 @@ def create_topic():
             flash('Ин мавзӯъ аллакай мавҷуд аст.', 'danger')
             return render_template('admin/topic_form.html', topic=None)
         
-        topic = Topic(title=title)
+        topic = Topic(title=title, color=color)
         db.session.add(topic)
         db.session.commit()
         
@@ -81,6 +82,7 @@ def edit_topic(id):
     
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
+        color = request.form.get('color', '#40916c').strip()
         
         if not title:
             flash('Номи мавзӯъ лозим аст.', 'danger')
@@ -92,6 +94,7 @@ def edit_topic(id):
             return render_template('admin/topic_form.html', topic=topic)
         
         topic.title = title
+        topic.color = color
         db.session.commit()
         
         flash('Мавзӯъ бо муваффақият таҳрир карда шуд.', 'success')
@@ -197,3 +200,31 @@ def delete_user(id):
     
     flash('Корбар бо муваффақият нест карда шуд.', 'success')
     return redirect(url_for('admin.users'))
+
+@admin_bp.route('/map')
+@login_required
+@admin_required
+def admin_map():
+    topics = Topic.query.order_by(Topic.title).all()
+    requests_with_location = Request.query.filter(
+        Request.latitude.isnot(None),
+        Request.longitude.isnot(None)
+    ).all()
+    
+    requests_data = []
+    for req in requests_with_location:
+        requests_data.append({
+            'id': req.id,
+            'lat': req.latitude,
+            'lng': req.longitude,
+            'topic_id': req.topic_id,
+            'topic_title': req.topic.title,
+            'topic_color': req.topic.color,
+            'status': req.status,
+            'status_label': req.get_status_label(),
+            'comment': req.comment or '',
+            'author': req.author.username,
+            'created_at': req.created_at.strftime('%d.%m.%Y %H:%M')
+        })
+    
+    return render_template('admin/map.html', topics=topics, requests_data=requests_data)

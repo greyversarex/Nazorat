@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Харита - Systemi Darkhostho{% endblock %}
+
+{% block content %}
+<div class="map-fullscreen-container">
+    <div class="map-filters-panel">
+        <div class="card shadow-sm">
+            <div class="card-header py-2">
+                <h6 class="mb-0">
+                    <i class="bi bi-funnel me-1"></i>Филтрҳо аз рӯи мавзӯъ
+                </h6>
+            </div>
+            <div class="card-body py-2">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="selectAll" checked>
+                    <label class="form-check-label fw-bold" for="selectAll">
+                        Ҳама
+                    </label>
+                </div>
+                <hr class="my-2">
+                {% for topic in topics %}
+                <div class="form-check mb-1">
+                    <input class="form-check-input topic-filter" 
+                           type="checkbox" 
+                           id="topic{{ topic.id }}" 
+                           data-topic-id="{{ topic.id }}" 
+                           checked>
+                    <label class="form-check-label d-flex align-items-center gap-2" for="topic{{ topic.id }}">
+                        <span class="topic-color-dot" style="background-color: {{ topic.color }};"></span>
+                        {{ topic.title }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div id="adminMap" class="admin-map"></div>
+</div>
+
+<style>
+.map-fullscreen-container {
+    position: relative;
+    margin: -1.5rem;
+    height: calc(100vh - 120px);
+}
+
+.admin-map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.map-filters-panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    max-width: 280px;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+.map-filters-panel .card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+}
+
+.topic-color-dot {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.2);
+}
+
+@media (max-width: 576px) {
+    .map-filters-panel {
+        max-width: 220px;
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const requestsData = {{ requests_data | tojson | safe }};
+    
+    const defaultCenter = [38.56, 68.77];
+    const map = L.map('adminMap').setView(defaultCenter, 12);
+    
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(map);
+    
+    const markers = {};
+    const markerLayers = {};
+    
+    function createCustomIcon(color) {
+        return L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="
+                background-color: ${color};
+                width: 24px;
+                height: 24px;
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                border: 2px solid white;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            "></div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 24],
+            popupAnchor: [0, -24]
+        });
+    }
+    
+    requestsData.forEach(function(req) {
+        const icon = createCustomIcon(req.topic_color);
+        const marker = L.marker([req.lat, req.lng], { icon: icon });
+        
+        const popupContent = `
+            <div style="min-width: 200px;">
+                <div class="mb-2">
+                    <span class="badge" style="background-color: ${req.topic_color};">${req.topic_title}</span>
+                    <span class="badge bg-${getStatusClass(req.status)}">${req.status_label}</span>
+                </div>
+                <p class="mb-1"><strong>Дархост #${req.id}</strong></p>
+                ${req.comment ? `<p class="mb-1 small">${req.comment}</p>` : ''}
+                <p class="mb-0 small text-muted">
+                    <i class="bi bi-person me-1"></i>${req.author}<br>
+                    <i class="bi bi-clock me-1"></i>${req.created_at}
+                </p>
+            </div>
+        `;
+        
+        marker.bindPopup(popupContent);
+        marker.addTo(map);
+        
+        if (!markers[req.topic_id]) {
+            markers[req.topic_id] = [];
+        }
+        markers[req.topic_id].push(marker);
+    });
+    
+    function getStatusClass(status) {
+        const classes = {
+            'new': 'primary',
+            'in_progress': 'warning',
+            'completed': 'success',
+            'rejected': 'danger'
+        };
+        return classes[status] || 'secondary';
+    }
+    
+    if (requestsData.length > 0) {
+        const bounds = L.latLngBounds(requestsData.map(r => [r.lat, r.lng]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
+    
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const topicCheckboxes = document.querySelectorAll('.topic-filter');
+    
+    function updateMarkerVisibility() {
+        const selectedTopics = new Set();
+        topicCheckboxes.forEach(function(cb) {
+            if (cb.checked) {
+                selectedTopics.add(parseInt(cb.dataset.topicId));
+            }
+        });
+        
+        for (const topicId in markers) {
+            markers[topicId].forEach(function(marker) {
+                if (selectedTopics.has(parseInt(topicId))) {
+                    marker.addTo(map);
+                } else {
+                    marker.remove();
+                }
+            });
+        }
+    }
+    
+    selectAllCheckbox.addEventListener('change', function() {
+        topicCheckboxes.forEach(function(cb) {
+            cb.checked = selectAllCheckbox.checked;
+        });
+        updateMarkerVisibility();
+    });
+    
+    topicCheckboxes.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            const allChecked = Array.from(topicCheckboxes).every(c => c.checked);
+            const noneChecked = Array.from(topicCheckboxes).every(c => !c.checked);
+            
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = !allChecked && !noneChecked;
+            
+            updateMarkerVisibility();
+        });
+    });
+    
+    setTimeout(function() {
+        map.invalidateSize();
+    }, 100);
+});
+</script>
+{% endblock %}
