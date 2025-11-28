@@ -269,6 +269,53 @@ def delete_user(id):
     
     return redirect(url_for('admin.users'))
 
+@admin_bp.route('/requests/<int:id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_request(id):
+    req = Request.query.get_or_404(id)
+    
+    if req.media_filename:
+        import os
+        from flask import current_app
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], req.media_filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+    
+    db.session.delete(req)
+    db.session.commit()
+    flash('Дархост бо муваффақият нест карда шуд.', 'success')
+    
+    return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/requests/<int:id>/reply', methods=['POST'])
+@login_required
+@admin_required
+def reply_request(id):
+    from datetime import datetime
+    req = Request.query.get_or_404(id)
+    
+    reply_text = request.form.get('reply', '').strip()
+    mark_completed = request.form.get('mark_completed') == 'yes'
+    
+    if reply_text:
+        req.reply = reply_text
+        req.replied_at = datetime.utcnow()
+        flash('Ҷавоб бо муваффақият фиристода шуд.', 'success')
+    else:
+        req.reply = None
+        req.replied_at = None
+        flash('Ҷавоб пок карда шуд.', 'info')
+    
+    if mark_completed:
+        req.status = 'completed'
+    else:
+        req.status = 'under_review'
+    
+    db.session.commit()
+    
+    return redirect(url_for('user.view_request', id=id))
+
 @admin_bp.route('/map')
 @login_required
 @admin_required

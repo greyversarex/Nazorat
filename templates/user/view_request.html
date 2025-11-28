@@ -94,6 +94,25 @@
                     </div>
                 </div>
                 {% endif %}
+                
+                {% if request.reply %}
+                <hr>
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="text-success mb-3">
+                            <i class="bi bi-check-circle me-2"></i>Ҷавоби админ
+                        </h5>
+                        <div class="bg-light p-3 rounded">
+                            <p class="mb-2">{{ request.reply }}</p>
+                            {% if request.replied_at %}
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ request.replied_at.strftime('%d.%m.%Y %H:%M') }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             <div class="card-footer">
                 <a href="{% if current_user.is_admin() %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('user.dashboard') }}{% endif %}" 
@@ -102,6 +121,35 @@
                 </a>
             </div>
         </div>
+        
+        {% if current_user.is_admin() %}
+        <div class="card shadow-sm mt-4" id="reply-section">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-reply me-2"></i>Ҷавоб додан
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.reply_request', id=request.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="reply" class="form-label">Матни ҷавоб</label>
+                        <textarea class="form-control" id="reply" name="reply" rows="4">{{ request.reply or '' }}</textarea>
+                        <small class="text-muted">Барои пок кардани ҷавоб, матнро холӣ гузоред</small>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="mark_completed" value="yes" id="markCompleted" {% if request.status == 'completed' %}checked{% endif %}>
+                        <label class="form-check-label" for="markCompleted">
+                            Ҳамчун иҷро шуда қайд кун
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Фиристодан
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

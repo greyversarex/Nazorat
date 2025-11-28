@@ -65,7 +65,7 @@
         </thead>
         <tbody>
             {% for req in requests %}
-            <tr>
+            <tr class="request-row" data-href="{{ url_for('user.view_request', id=req.id) }}" style="cursor: pointer;">
                 <td><strong>{{ req.id }}</strong></td>
                 <td>
                     <span class="badge bg-secondary">{{ req.topic.title }}</span>
@@ -84,45 +84,20 @@
                         {{ req.get_status_label() }}
                     </span>
                 </td>
-                <td>
+                <td class="actions-cell" onclick="event.stopPropagation();">
                     <div class="btn-group btn-group-sm">
-                        <a href="{{ url_for('user.view_request', id=req.id) }}" 
-                           class="btn btn-outline-info" 
-                           title="Дидан">
-                            <i class="bi bi-eye"></i>
+                        <a href="{{ url_for('user.view_request', id=req.id) }}#reply-section" 
+                           class="btn btn-outline-primary" 
+                           title="Ҷавоб додан">
+                            <i class="bi bi-reply"></i>
                         </a>
-                        {% if req.latitude and req.longitude %}
                         <button type="button" 
-                                class="btn btn-outline-success" 
+                                class="btn btn-outline-danger" 
                                 data-bs-toggle="modal" 
-                                data-bs-target="#mapModal"
-                                data-lat="{{ req.latitude }}"
-                                data-lng="{{ req.longitude }}"
-                                data-title="{{ req.comment[:100] if req.comment else 'Дархост #' ~ req.id }}"
-                                title="Дидани харита">
-                            <i class="bi bi-geo-alt"></i>
+                                data-bs-target="#deleteRequestModal{{ req.id }}"
+                                title="Нест кардан">
+                            <i class="bi bi-trash"></i>
                         </button>
-                        {% endif %}
-                        <button type="button" 
-                                class="btn btn-outline-primary dropdown-toggle" 
-                                data-bs-toggle="dropdown" 
-                                title="Тағйири ҳолат">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><h6 class="dropdown-header">Тағйири ҳолат</h6></li>
-                            {% for status_key, status_label in req.STATUS_LABELS.items() %}
-                            <li>
-                                <form method="POST" action="{{ url_for('admin.update_status', id=req.id) }}" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <input type="hidden" name="status" value="{{ status_key }}">
-                                    <button type="submit" class="dropdown-item {% if req.status == status_key %}active{% endif %}">
-                                        {{ status_label }}
-                                    </button>
-                                </form>
-                            </li>
-                            {% endfor %}
-                        </ul>
                     </div>
                 </td>
             </tr>
@@ -130,6 +105,34 @@
         </tbody>
     </table>
 </div>
+
+{% for req in requests %}
+<div class="modal fade" id="deleteRequestModal{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Нест кардани дархост
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Оё мутмаин ҳастед, ки мехоҳед дархости <strong>#{{ req.id }}</strong>-ро нест кунед?</p>
+                <p class="text-danger mb-0"><small>Ин амал бозгашт надорад!</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Бекор</button>
+                <form method="POST" action="{{ url_for('admin.delete_request', id=req.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Нест кардан
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% else %}
 <div class="text-center py-5">
     <i class="bi bi-inbox display-1 text-muted"></i>
@@ -137,57 +140,18 @@
     <p class="text-muted">Ҳоло ягон дархост нест</p>
 </div>
 {% endif %}
-
-<div class="modal fade" id="mapModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-geo-alt-fill me-2"></i>Ҷойгиршавӣ
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div id="requestMap" style="height: 400px;"></div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const mapModal = document.getElementById('mapModal');
-    let map = null;
-    let marker = null;
-    
-    mapModal.addEventListener('shown.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const lat = parseFloat(button.getAttribute('data-lat'));
-        const lng = parseFloat(button.getAttribute('data-lng'));
-        const title = button.getAttribute('data-title');
-        
-        if (!map) {
-            map = L.map('requestMap').setView([lat, lng], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-        } else {
-            map.setView([lat, lng], 15);
-        }
-        
-        if (marker) {
-            map.removeLayer(marker);
-        }
-        
-        marker = L.marker([lat, lng]).addTo(map)
-            .bindPopup(title)
-            .openPopup();
-        
-        setTimeout(function() {
-            map.invalidateSize();
-        }, 100);
+    var rows = document.querySelectorAll('.request-row');
+    rows.forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.actions-cell')) {
+                window.location.href = this.getAttribute('data-href');
+            }
+        });
     });
 });
 </script>

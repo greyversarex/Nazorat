@@ -60,6 +60,24 @@ def migrate_nullable_user_id():
     except Exception as e:
         print(f'Migration nullable user_id check: {e}')
 
+def migrate_add_reply_fields():
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.engine)
+    columns = [col['name'] for col in inspector.get_columns('requests')]
+    
+    if 'reply' not in columns:
+        db.session.execute(text("ALTER TABLE requests ADD COLUMN reply TEXT"))
+        db.session.commit()
+        print('Migration: Added reply column to requests')
+    
+    if 'replied_at' not in columns:
+        db.session.execute(text("ALTER TABLE requests ADD COLUMN replied_at DATETIME"))
+        db.session.commit()
+        print('Migration: Added replied_at column to requests')
+    
+    db.session.execute(text("UPDATE requests SET status = 'under_review' WHERE status IN ('new', 'in_progress', 'rejected')"))
+    db.session.commit()
+
 def create_default_admin():
     from models import User
     admin = User.query.filter_by(username='admin').first()
@@ -125,6 +143,7 @@ def create_app():
         migrate_add_topic_color()
         migrate_add_user_full_name()
         migrate_nullable_user_id()
+        migrate_add_reply_fields()
         create_default_admin()
     
     return app

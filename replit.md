@@ -48,15 +48,15 @@ Note: Open registration is disabled. Only admins can create new users from the a
    - Geolocation (via browser Geolocation API)
    - Comments
    - Photo/Video uploads
-4. **Status Tracking**: New → In Progress → Completed/Rejected
-5. **Map Integration**: Leaflet.js with OpenStreetMap for viewing request locations
-6. **PWA**: Installable on mobile devices
+4. **Status Tracking**: Under Review → Completed (two statuses only)
+5. **Admin Reply**: Admin can respond to requests with text replies
+6. **Request Deletion**: Admin can delete requests with confirmation
+7. **Map Integration**: Leaflet.js with OpenStreetMap for viewing request locations
+8. **PWA**: Installable on mobile devices
 
 ## Request Statuses (Tajik)
-- `new` = Нав
-- `in_progress` = Дар баррасӣ
-- `completed` = Иҷро шуд
-- `rejected` = Рад шуд
+- `under_review` = Дар тафтиш (Under review)
+- `completed` = Иҷро шуд (Completed)
 
 ## Running the Application
 ```bash
@@ -78,3 +78,8 @@ The app runs on port 5000.
 - November 2024: Initial implementation with all core features
 - November 2025: Added CSRF protection and open redirect vulnerability fix
 - November 2025: Removed open registration; user creation now admin-only via admin panel
+- November 2025: Simplified statuses to only "Дар тафтиш" (under review) and "Иҷро шуд" (completed)
+- November 2025: Added admin reply functionality with timestamp
+- November 2025: Added request deletion with confirmation modal
+- November 2025: Dashboard rows are now clickable to view request details
+- November 2025: Action buttons changed to Reply and Delete only

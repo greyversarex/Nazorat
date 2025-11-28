@@ -49,21 +49,19 @@ class Request(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     comment = db.Column(db.Text, nullable=True)
     media_filename = db.Column(db.String(255), nullable=True)
-    status = db.Column(db.String(20), nullable=False, default='new')
+    status = db.Column(db.String(20), nullable=False, default='under_review')
+    reply = db.Column(db.Text, nullable=True)
+    replied_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     STATUS_LABELS = {
-        'new': 'Нав',
-        'in_progress': 'Дар баррасӣ',
-        'completed': 'Иҷро шуд',
-        'rejected': 'Рад шуд'
+        'under_review': 'Дар тафтиш',
+        'completed': 'Иҷро шуд'
     }
     
     STATUS_CLASSES = {
-        'new': 'primary',
-        'in_progress': 'warning',
-        'completed': 'success',
-        'rejected': 'danger'
+        'under_review': 'warning',
+        'completed': 'success'
     }
     
     def get_status_label(self):
