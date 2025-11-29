@@ -30,27 +30,27 @@
         <tbody>
             {% for user in users %}
             <tr>
-                <td><strong>{{ user.id }}</strong></td>
-                <td>
+                <td data-label="#">{{ user.id }}</td>
+                <td data-label="ФИО">
                     <i class="bi bi-person-circle me-2 text-primary"></i>
                     {{ user.full_name or '-' }}
                 </td>
-                <td>
+                <td data-label="Логин">
                     <code>{{ user.username }}</code>
                 </td>
-                <td>
+                <td data-label="Нақш">
                     {% if user.is_admin() %}
                         <span class="badge bg-danger">Админ</span>
                     {% else %}
                         <span class="badge bg-secondary">Корбар</span>
                     {% endif %}
                 </td>
-                <td>
+                <td data-label="Сана">
                     <small class="text-muted">
                         {{ user.created_at.strftime('%d.%m.%Y %H:%M') }}
                     </small>
                 </td>
-                <td>
+                <td data-label="Дархостҳо">
                     <span class="badge bg-info">{{ user.requests|length }}</span>
                 </td>
                 <td>

@@ -66,20 +66,20 @@
         <tbody>
             {% for req in requests %}
             <tr class="request-row" data-href="{{ url_for('user.view_request', id=req.id) }}" style="cursor: pointer;">
-                <td><strong>{{ req.id }}</strong></td>
-                <td>
+                <td data-label="#">{{ req.id }}</td>
+                <td data-label="Мавзӯъ">
                     <span class="badge bg-secondary">{{ req.topic.title }}</span>
                 </td>
-                <td>{% if req.author %}{{ req.author.username }}{% else %}<span class="text-muted fst-italic">Нест шуд</span>{% endif %}</td>
-                <td class="text-truncate" style="max-width: 200px;">
+                <td data-label="Корбар">{% if req.author %}{{ req.author.username }}{% else %}<span class="text-muted fst-italic">Нест шуд</span>{% endif %}</td>
+                <td data-label="Шарҳ">
                     {{ req.comment[:50] }}{% if req.comment|length > 50 %}...{% endif %}
                 </td>
-                <td>
+                <td data-label="Сана">
                     <small class="text-muted">
                         {{ req.created_at.strftime('%d.%m.%Y %H:%M') }}
                     </small>
                 </td>
-                <td>
+                <td data-label="Ҳолат">
                     <span class="badge bg-{{ req.get_status_class() }}">
                         {{ req.get_status_label() }}
                     </span>
