@@ -1,0 +1,742 @@
+{% extends "base.html" %}
+
+{% block title %}Омор - Nazorat{% endblock %}
+
+{% block content %}
+<div class="statistics-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-graph-up-arrow me-2"></i>Омор</h2>
+    </div>
+
+    <div class="card mb-4 filter-card">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.statistics') }}" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="date_from" class="form-label">
+                        <i class="bi bi-calendar-event me-1"></i>Аз санаи
+                    </label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="date_to" class="form-label">
+                        <i class="bi bi-calendar-event me-1"></i>То санаи
+                    </label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i>Филтр
+                    </button>
+                </div>
+                {% if date_from or date_to %}
+                <div class="col-md-2">
+                    <a href="{{ url_for('admin.statistics') }}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle me-1"></i>Пок кардан
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-total">
+                <div class="stat-icon">
+                    <i class="bi bi-folder2-open"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ total_requests }}</div>
+                    <div class="stat-label">Ҳамаи дархостҳо</div>
+                </div>
+                <div class="stat-glow"></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-pending">
+                <div class="stat-icon">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ under_review_requests }}</div>
+                    <div class="stat-label">Дар тафтиш</div>
+                </div>
+                <div class="stat-glow"></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-completed">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ completed_requests }}</div>
+                    <div class="stat-label">Иҷро шуд</div>
+                </div>
+                <div class="stat-glow"></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-rate">
+                <div class="stat-icon">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ completion_rate }}%</div>
+                    <div class="stat-label">Дараҷаи иҷро</div>
+                </div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar" style="width: {{ completion_rate }}%"></div>
+                </div>
+                <div class="stat-glow"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5><i class="bi bi-pie-chart-fill me-2"></i>Дархостҳо аз рӯи мавзӯъҳо</h5>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-container-3d">
+                        <canvas id="topicsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5><i class="bi bi-bar-chart-fill me-2"></i>Динамикаи дархостҳо</h5>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-container">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5><i class="bi bi-list-stars me-2"></i>Тақсимоти мавзӯъҳо</h5>
+                </div>
+                <div class="chart-body">
+                    {% if topic_stats %}
+                    <div class="topic-bars">
+                        {% for topic in topic_stats %}
+                        <div class="topic-bar-item">
+                            <div class="topic-bar-header">
+                                <span class="topic-name">
+                                    <span class="topic-dot" style="background-color: {{ topic.color }}"></span>
+                                    {{ topic.title }}
+                                </span>
+                                <span class="topic-stats">
+                                    <span class="topic-count">{{ topic.count }}</span>
+                                    <span class="topic-percentage">({{ topic.percentage }}%)</span>
+                                </span>
+                            </div>
+                            <div class="topic-bar-track">
+                                <div class="topic-bar-fill" style="width: {{ topic.percentage }}%; background: linear-gradient(135deg, {{ topic.color }}, {{ topic.color }}dd);">
+                                    <div class="topic-bar-glow"></div>
+                                </div>
+                            </div>
+                            <div class="topic-bar-details">
+                                <span class="detail-item completed">
+                                    <i class="bi bi-check-circle-fill"></i> {{ topic.completed }} иҷро шуд
+                                </span>
+                                <span class="detail-item pending">
+                                    <i class="bi bi-hourglass-split"></i> {{ topic.pending }} дар тафтиш
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox display-4"></i>
+                        <p class="mt-2">Маълумот нест</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-card h-100">
+                <div class="chart-header">
+                    <h5><i class="bi bi-people-fill me-2"></i>Корбарон</h5>
+                </div>
+                <div class="chart-body d-flex flex-column justify-content-center">
+                    <div class="users-stats">
+                        <div class="user-stat-item">
+                            <div class="user-stat-icon admin-icon">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div class="user-stat-info">
+                                <div class="user-stat-value">{{ total_admins }}</div>
+                                <div class="user-stat-label">Админҳо</div>
+                            </div>
+                        </div>
+                        <div class="user-stat-item">
+                            <div class="user-stat-icon user-icon">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div class="user-stat-info">
+                                <div class="user-stat-value">{{ total_users }}</div>
+                                <div class="user-stat-label">Корбарон</div>
+                            </div>
+                        </div>
+                        <div class="user-stat-item total">
+                            <div class="user-stat-icon total-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <div class="user-stat-info">
+                                <div class="user-stat-value">{{ total_users + total_admins }}</div>
+                                <div class="user-stat-label">Ҳамагӣ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5><i class="bi bi-graph-up me-2"></i>Ҳолати иҷро</h5>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.statistics-page {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.filter-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+}
+
+.stat-card {
+    position: relative;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card-total {
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    color: #fff;
+}
+
+.stat-card-pending {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    color: #fff;
+}
+
+.stat-card-completed {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    color: #fff;
+}
+
+.stat-card-rate {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+    color: #fff;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin-top: 0.25rem;
+}
+
+.stat-glow {
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.stat-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-progress-bar {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.6);
+    transition: width 1s ease;
+}
+
+.chart-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.chart-header {
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    color: #fff;
+    padding: 1rem 1.5rem;
+}
+
+.chart-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: #fff;
+}
+
+.chart-body {
+    padding: 1.5rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.chart-container-3d {
+    position: relative;
+    height: 300px;
+    perspective: 1000px;
+}
+
+.topic-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.topic-bar-item {
+    animation: slideIn 0.5s ease forwards;
+    opacity: 0;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.topic-bar-item:nth-child(1) { animation-delay: 0.1s; }
+.topic-bar-item:nth-child(2) { animation-delay: 0.2s; }
+.topic-bar-item:nth-child(3) { animation-delay: 0.3s; }
+.topic-bar-item:nth-child(4) { animation-delay: 0.4s; }
+.topic-bar-item:nth-child(5) { animation-delay: 0.5s; }
+
+.topic-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.topic-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.topic-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.topic-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.topic-count {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0891b2;
+}
+
+.topic-percentage {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.topic-bar-track {
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.topic-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    position: relative;
+    transition: width 1s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.topic-bar-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
+    border-radius: 6px 6px 0 0;
+}
+
+.topic-bar-details {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.detail-item {
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.detail-item.completed {
+    color: #10b981;
+}
+
+.detail-item.pending {
+    color: #f59e0b;
+}
+
+.users-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.user-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+}
+
+.user-stat-item:hover {
+    transform: scale(1.02);
+}
+
+.user-stat-item.total {
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    color: #fff;
+}
+
+.user-stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.admin-icon {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    color: #fff;
+}
+
+.user-icon {
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    color: #fff;
+}
+
+.total-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.user-stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.user-stat-label {
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.25rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .chart-container, .chart-container-3d {
+        height: 250px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const topicStats = {{ topic_stats | tojson }};
+    const dailyStats = {{ daily_stats | tojson }};
+    const completedRequests = {{ completed_requests }};
+    const underReviewRequests = {{ under_review_requests }};
+    
+    if (topicStats.length > 0) {
+        const ctx1 = document.getElementById('topicsChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: topicStats.map(t => t.title),
+                datasets: [{
+                    data: topicStats.map(t => t.count),
+                    backgroundColor: topicStats.map(t => t.color),
+                    borderWidth: 3,
+                    borderColor: '#fff',
+                    hoverBorderWidth: 4,
+                    hoverOffset: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '55%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: { size: 12, weight: '500' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const topic = topicStats[context.dataIndex];
+                                return [
+                                    `Дархостҳо: ${topic.count}`,
+                                    `Фоиз: ${topic.percentage}%`,
+                                    `Иҷро шуд: ${topic.completed}`,
+                                    `Дар тафтиш: ${topic.pending}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1500,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+    
+    if (dailyStats.length > 0) {
+        const ctx2 = document.getElementById('dailyChart').getContext('2d');
+        const gradient = ctx2.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(8, 145, 178, 0.6)');
+        gradient.addColorStop(1, 'rgba(8, 145, 178, 0.05)');
+        
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: dailyStats.map(d => d.date),
+                datasets: [{
+                    label: 'Дархостҳо',
+                    data: dailyStats.map(d => d.count),
+                    fill: true,
+                    backgroundColor: gradient,
+                    borderColor: '#0891b2',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#0891b2',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            title: function(items) {
+                                return 'Санаи ' + items[0].label;
+                            },
+                            label: function(context) {
+                                return 'Дархостҳо: ' + context.raw;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { 
+                            maxRotation: 45,
+                            font: { size: 11 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: { 
+                            stepSize: 1,
+                            font: { size: 11 }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+    
+    const ctx3 = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx3, {
+        type: 'bar',
+        data: {
+            labels: ['Иҷро шуд', 'Дар тафтиш'],
+            datasets: [{
+                data: [completedRequests, underReviewRequests],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)'
+                ],
+                borderColor: [
+                    '#10b981',
+                    '#f59e0b'
+                ],
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    ticks: { stepSize: 1 }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { size: 14, weight: '600' } }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
+from datetime import datetime, timedelta
+from sqlalchemy import func
 from models import User, Topic, Request
 from extensions import db
 
@@ -343,3 +345,100 @@ def admin_map():
         })
     
     return render_template('admin/map.html', topics=topics, requests_data=requests_data)
+
+@admin_bp.route('/statistics')
+@login_required
+@admin_required
+def statistics():
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    
+    query = Request.query
+    
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, '%Y-%m-%d')
+            query = query.filter(Request.created_at >= from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, '%Y-%m-%d') + timedelta(days=1)
+            query = query.filter(Request.created_at < to_date)
+        except ValueError:
+            pass
+    
+    total_requests = query.count()
+    completed_requests = query.filter(Request.status == 'completed').count()
+    under_review_requests = query.filter(Request.status == 'under_review').count()
+    
+    topics = Topic.query.all()
+    topic_stats = []
+    for topic in topics:
+        topic_query = query.filter(Request.topic_id == topic.id)
+        count = topic_query.count()
+        completed = topic_query.filter(Request.status == 'completed').count()
+        percentage = round((count / total_requests * 100), 1) if total_requests > 0 else 0
+        topic_stats.append({
+            'id': topic.id,
+            'title': topic.title,
+            'color': topic.color,
+            'count': count,
+            'completed': completed,
+            'pending': count - completed,
+            'percentage': percentage
+        })
+    
+    topic_stats.sort(key=lambda x: x['count'], reverse=True)
+    
+    daily_stats = []
+    if date_from and date_to:
+        try:
+            start = datetime.strptime(date_from, '%Y-%m-%d')
+            end = datetime.strptime(date_to, '%Y-%m-%d')
+            current = start
+            while current <= end:
+                next_day = current + timedelta(days=1)
+                day_count = Request.query.filter(
+                    Request.created_at >= current,
+                    Request.created_at < next_day
+                ).count()
+                daily_stats.append({
+                    'date': current.strftime('%d.%m'),
+                    'count': day_count
+                })
+                current = next_day
+        except ValueError:
+            pass
+    else:
+        for i in range(29, -1, -1):
+            day = datetime.now() - timedelta(days=i)
+            next_day = day + timedelta(days=1)
+            day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+            day_end = next_day.replace(hour=0, minute=0, second=0, microsecond=0)
+            day_count = Request.query.filter(
+                Request.created_at >= day_start,
+                Request.created_at < day_end
+            ).count()
+            daily_stats.append({
+                'date': day.strftime('%d.%m'),
+                'count': day_count
+            })
+    
+    total_users = User.query.filter(User.role == 'user').count()
+    total_admins = User.query.filter(User.role == 'admin').count()
+    
+    completion_rate = round((completed_requests / total_requests * 100), 1) if total_requests > 0 else 0
+    
+    return render_template('admin/statistics.html',
+                         total_requests=total_requests,
+                         completed_requests=completed_requests,
+                         under_review_requests=under_review_requests,
+                         topic_stats=topic_stats,
+                         daily_stats=daily_stats,
+                         total_users=total_users,
+                         total_admins=total_admins,
+                         completion_rate=completion_rate,
+                         date_from=date_from,
+                         date_to=date_to)

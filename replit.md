@@ -91,3 +91,4 @@ The app runs on port 5000.
 - November 2025: Unified cyan/teal (#0891b2) color scheme across entire interface
 - November 2025: Mobile-responsive tables (card layout on small screens)
 - November 2025: Migrated from SQLite to PostgreSQL for reliable data persistence
+- November 2025: Added Statistics (Омор) page with interactive charts, date filtering, and visual analytics
