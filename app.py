@@ -6,7 +6,8 @@ def migrate_add_topic_color():
     from sqlalchemy import text, inspect
     try:
         inspector = inspect(db.engine)
-        if 'topics' in inspector.get_table_names():
+        tables = inspector.get_table_names()
+        if 'topics' in tables:
             columns = [col['name'] for col in inspector.get_columns('topics')]
             if 'color' not in columns:
                 db.session.execute(text("ALTER TABLE topics ADD COLUMN color VARCHAR(7) DEFAULT '#40916c'"))
@@ -14,69 +15,51 @@ def migrate_add_topic_color():
                 db.session.commit()
                 print('Migration: Added color column to topics table')
     except Exception as e:
+        db.session.rollback()
         print(f'Migration check: {e}')
 
 def migrate_add_user_full_name():
     from sqlalchemy import text, inspect
     try:
         inspector = inspect(db.engine)
-        if 'users' in inspector.get_table_names():
+        tables = inspector.get_table_names()
+        if 'users' in tables:
             columns = [col['name'] for col in inspector.get_columns('users')]
             if 'full_name' not in columns:
                 db.session.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR(150)"))
                 db.session.commit()
                 print('Migration: Added full_name column to users table')
     except Exception as e:
+        db.session.rollback()
         print(f'Migration check: {e}')
 
 def migrate_nullable_user_id():
-    from sqlalchemy import text, inspect
-    try:
-        inspector = inspect(db.engine)
-        if 'requests' in inspector.get_table_names():
-            columns = inspector.get_columns('requests')
-            for col in columns:
-                if col['name'] == 'user_id':
-                    if col.get('nullable') == False:
-                        db.session.execute(text("""
-                            CREATE TABLE requests_new (
-                                id INTEGER PRIMARY KEY,
-                                user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-                                topic_id INTEGER NOT NULL REFERENCES topics(id),
-                                latitude REAL,
-                                longitude REAL,
-                                comment TEXT,
-                                media_filename VARCHAR(255),
-                                status VARCHAR(20) NOT NULL DEFAULT 'new',
-                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                            )
-                        """))
-                        db.session.execute(text("INSERT INTO requests_new SELECT * FROM requests"))
-                        db.session.execute(text("DROP TABLE requests"))
-                        db.session.execute(text("ALTER TABLE requests_new RENAME TO requests"))
-                        db.session.commit()
-                        print('Migration: Made user_id nullable in requests table')
-                    break
-    except Exception as e:
-        print(f'Migration nullable user_id check: {e}')
+    pass
 
 def migrate_add_reply_fields():
     from sqlalchemy import inspect, text
-    inspector = inspect(db.engine)
-    columns = [col['name'] for col in inspector.get_columns('requests')]
-    
-    if 'reply' not in columns:
-        db.session.execute(text("ALTER TABLE requests ADD COLUMN reply TEXT"))
+    try:
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        if 'requests' not in tables:
+            return
+        columns = [col['name'] for col in inspector.get_columns('requests')]
+        
+        if 'reply' not in columns:
+            db.session.execute(text("ALTER TABLE requests ADD COLUMN reply TEXT"))
+            db.session.commit()
+            print('Migration: Added reply column to requests')
+        
+        if 'replied_at' not in columns:
+            db.session.execute(text("ALTER TABLE requests ADD COLUMN replied_at TIMESTAMP"))
+            db.session.commit()
+            print('Migration: Added replied_at column to requests')
+        
+        db.session.execute(text("UPDATE requests SET status = 'under_review' WHERE status IN ('new', 'in_progress', 'rejected')"))
         db.session.commit()
-        print('Migration: Added reply column to requests')
-    
-    if 'replied_at' not in columns:
-        db.session.execute(text("ALTER TABLE requests ADD COLUMN replied_at DATETIME"))
-        db.session.commit()
-        print('Migration: Added replied_at column to requests')
-    
-    db.session.execute(text("UPDATE requests SET status = 'under_review' WHERE status IN ('new', 'in_progress', 'rejected')"))
-    db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f'Migration reply fields: {e}')
 
 def create_default_admin():
     from models import User
@@ -97,15 +80,18 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'dev-secret-key-change-in-production')
     
     basedir = os.path.abspath(os.path.dirname(__file__))
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'instance', 'site.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_recycle': 300,
+        'pool_pre_ping': True
+    }
     
     app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static', 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
     app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'webm'}
     
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
     
     db.init_app(app)
     bcrypt.init_app(app)

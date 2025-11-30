@@ -1,7 +1,7 @@
 # Nazorat - Request Management System
 
 ## Overview
-A Progressive Web Application (PWA) for managing citizen requests/tickets. Built with Python Flask, SQLAlchemy, and Bootstrap 5. The interface is fully localized in Tajik language.
+A Progressive Web Application (PWA) for managing citizen requests/tickets. Built with Python Flask, SQLAlchemy, PostgreSQL, and Bootstrap 5. The interface is fully localized in Tajik language.
 
 ## Project Structure
 ```
@@ -64,9 +64,14 @@ python app.py
 ```
 The app runs on port 5000.
 
+## Database
+- Uses PostgreSQL (Replit's built-in database) for reliable data persistence
+- Connection via DATABASE_URL environment variable
+- Tables: users, topics, requests
+
 ## Deployment Notes
-- `.gitignore` excludes `instance/` (database) and `static/uploads/` (media)
-- This ensures production data is not overwritten when pushing code updates
+- `.gitignore` excludes `static/uploads/` (media files)
+- Database is managed by Replit PostgreSQL and persists automatically
 
 ## Security Features
 1. **CSRF Protection**: Flask-WTF CSRFProtect on all POST forms
@@ -83,3 +88,6 @@ The app runs on port 5000.
 - November 2025: Added request deletion with confirmation modal
 - November 2025: Dashboard rows are now clickable to view request details
 - November 2025: Action buttons changed to Reply and Delete only
+- November 2025: Unified cyan/teal (#0891b2) color scheme across entire interface
+- November 2025: Mobile-responsive tables (card layout on small screens)
+- November 2025: Migrated from SQLite to PostgreSQL for reliable data persistence
