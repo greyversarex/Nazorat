@@ -38,6 +38,7 @@ def create_request():
     
     if request.method == 'POST':
         topic_id = request.form.get('topic_id', type=int)
+        document_number = request.form.get('document_number', '').strip() or None
         latitude = request.form.get('latitude', type=float)
         longitude = request.form.get('longitude', type=float)
         comment = request.form.get('comment', '').strip()
@@ -67,6 +68,7 @@ def create_request():
         new_request = Request(
             user_id=current_user.id,
             topic_id=topic_id,
+            document_number=document_number,
             latitude=latitude,
             longitude=longitude,
             comment=comment,

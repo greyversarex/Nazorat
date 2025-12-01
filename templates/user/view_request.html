@@ -33,6 +33,17 @@
                     </div>
                 </div>
                 
+                {% if request.document_number %}
+                <div class="row mb-4">
+                    <div class="col-sm-4 text-muted">
+                        <i class="bi bi-file-earmark-text me-1"></i>Рақами ҳуҷҷат
+                    </div>
+                    <div class="col-sm-8">
+                        <strong>{{ request.document_number }}</strong>
+                    </div>
+                </div>
+                {% endif %}
+                
                 <div class="row mb-4">
                     <div class="col-sm-4 text-muted">
                         <i class="bi bi-calendar me-1"></i>Сана

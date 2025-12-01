@@ -94,6 +94,23 @@ def migrate_add_reg_number():
         db.session.rollback()
         print(f'Migration reg_number: {e}')
 
+def migrate_add_document_number():
+    from sqlalchemy import inspect, text
+    try:
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        if 'requests' not in tables:
+            return
+        columns = [col['name'] for col in inspector.get_columns('requests')]
+        
+        if 'document_number' not in columns:
+            db.session.execute(text("ALTER TABLE requests ADD COLUMN document_number VARCHAR(100)"))
+            db.session.commit()
+            print('Migration: Added document_number column to requests')
+    except Exception as e:
+        db.session.rollback()
+        print(f'Migration document_number: {e}')
+
 def create_default_admin():
     from models import User
     admin = User.query.filter_by(username='admin').first()
@@ -166,6 +183,7 @@ def create_app():
         migrate_nullable_user_id()
         migrate_add_reply_fields()
         migrate_add_reg_number()
+        migrate_add_document_number()
         create_default_admin()
     
     return app

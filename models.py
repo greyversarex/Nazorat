@@ -44,6 +44,7 @@ class Request(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     reg_number = db.Column(db.String(20), unique=True, nullable=True)
+    document_number = db.Column(db.String(100), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     topic_id = db.Column(db.Integer, db.ForeignKey('topics.id'), nullable=False)
     latitude = db.Column(db.Float, nullable=True)
