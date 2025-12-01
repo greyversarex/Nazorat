@@ -139,7 +139,7 @@ def create_app():
     
     app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static', 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
-    app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'webm', 'pdf', 'doc', 'docx'}
+    app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'mov', 'avi', 'webm', 'pdf', 'doc', 'docx'}
     
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
