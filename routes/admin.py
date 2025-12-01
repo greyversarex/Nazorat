@@ -23,14 +23,28 @@ def admin_required(f):
 def dashboard():
     topic_filter = request.args.get('topic', type=int)
     status_filter = request.args.get('status', type=str)
+    search_query = request.args.get('q', '').strip()
     
     query = Request.query.order_by(Request.created_at.desc())
     
+    if search_query:
+        search_term = f'%{search_query}%'
+        query = query.outerjoin(User, Request.user_id == User.id).outerjoin(Topic, Request.topic_id == Topic.id).filter(
+            db.or_(
+                Request.reg_number.ilike(search_term),
+                Request.document_number.ilike(search_term),
+                Request.comment.ilike(search_term),
+                User.username.ilike(search_term),
+                User.full_name.ilike(search_term),
+                Topic.title.ilike(search_term)
+            )
+        )
+    
     if topic_filter:
-        query = query.filter_by(topic_id=topic_filter)
+        query = query.filter(Request.topic_id == topic_filter)
     
     if status_filter and status_filter in Request.STATUS_LABELS:
-        query = query.filter_by(status=status_filter)
+        query = query.filter(Request.status == status_filter)
     
     requests = query.all()
     topics = Topic.query.order_by(Topic.title).all()
@@ -41,7 +55,44 @@ def dashboard():
                          topics=topics,
                          statuses=statuses,
                          selected_topic=topic_filter,
-                         selected_status=status_filter)
+                         selected_status=status_filter,
+                         search_query=search_query)
+
+@admin_bp.route('/search')
+@login_required
+@admin_required
+def search_requests():
+    q = request.args.get('q', '').strip()
+    if not q or len(q) < 2:
+        return jsonify([])
+    
+    search_term = f'%{q}%'
+    results = Request.query.outerjoin(User, Request.user_id == User.id).outerjoin(Topic, Request.topic_id == Topic.id).filter(
+        db.or_(
+            Request.reg_number.ilike(search_term),
+            Request.document_number.ilike(search_term),
+            Request.comment.ilike(search_term),
+            User.username.ilike(search_term),
+            User.full_name.ilike(search_term),
+            Topic.title.ilike(search_term)
+        )
+    ).order_by(Request.created_at.desc()).limit(10).all()
+    
+    suggestions = []
+    for req in results:
+        suggestions.append({
+            'id': req.id,
+            'reg_number': req.reg_number or f'#{req.id}',
+            'document_number': req.document_number or '',
+            'topic': req.topic.title if req.topic else '',
+            'author': req.author.full_name or req.author.username if req.author else 'Нест шуд',
+            'comment': (req.comment[:50] + '...' if req.comment and len(req.comment) > 50 else req.comment) or '',
+            'status': req.get_status_label(),
+            'status_class': req.get_status_class(),
+            'date': req.created_at.strftime('%d.%m.%Y')
+        })
+    
+    return jsonify(suggestions)
 
 @admin_bp.route('/topics')
 @login_required

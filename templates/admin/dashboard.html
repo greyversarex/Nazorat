@@ -10,7 +10,24 @@
 
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" action="{{ url_for('admin.dashboard') }}" class="row g-3 align-items-end">
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="position-relative">
+                    <label for="searchInput" class="form-label">
+                        <i class="bi bi-search me-1"></i>Ҷустуҷӯ
+                    </label>
+                    <input type="text" 
+                           class="form-control form-control-lg" 
+                           id="searchInput" 
+                           placeholder="Ҷустуҷӯ аз рӯи рақам, ном, мавзӯъ, шарҳ..."
+                           value="{{ search_query or '' }}"
+                           autocomplete="off">
+                    <div id="searchResults" class="position-absolute w-100 bg-white border rounded-3 shadow-lg mt-1" style="display: none; z-index: 1050; max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+        <form method="GET" action="{{ url_for('admin.dashboard') }}" id="filterForm" class="row g-3 align-items-end">
+            <input type="hidden" name="q" id="searchQueryHidden" value="{{ search_query or '' }}">
             <div class="col-md-4">
                 <label for="topic" class="form-label">Филтр аз рӯи мавзӯъ</label>
                 <select class="form-select" id="topic" name="topic">
@@ -38,7 +55,7 @@
                     <i class="bi bi-funnel me-1"></i>Филтр
                 </button>
             </div>
-            {% if selected_topic or selected_status %}
+            {% if selected_topic or selected_status or search_query %}
             <div class="col-md-2">
                 <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-1"></i>Пок кардан
@@ -153,6 +170,112 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    var searchInput = document.getElementById('searchInput');
+    var searchResults = document.getElementById('searchResults');
+    var searchQueryHidden = document.getElementById('searchQueryHidden');
+    var filterForm = document.getElementById('filterForm');
+    var debounceTimer;
+    
+    searchInput.addEventListener('input', function() {
+        var query = this.value.trim();
+        searchQueryHidden.value = query;
+        
+        clearTimeout(debounceTimer);
+        
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        debounceTimer = setTimeout(function() {
+            fetch('/admin/search?q=' + encodeURIComponent(query))
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.length === 0) {
+                        searchResults.innerHTML = '<div class="p-3 text-muted text-center"><i class="bi bi-search me-2"></i>Натиҷа ёфт нашуд</div>';
+                    } else {
+                        var html = '';
+                        data.forEach(function(item) {
+                            html += '<a href="/user/requests/' + item.id + '" class="d-block p-3 text-decoration-none border-bottom search-result-item" style="color: inherit;">';
+                            html += '<div class="d-flex justify-content-between align-items-start">';
+                            html += '<div>';
+                            html += '<span class="badge bg-primary me-2">' + item.reg_number + '</span>';
+                            if (item.document_number) {
+                                html += '<span class="badge bg-secondary me-1">' + item.document_number + '</span>';
+                            }
+                            html += '<span class="badge bg-info">' + item.topic + '</span>';
+                            html += '</div>';
+                            html += '<span class="badge bg-' + item.status_class + '">' + item.status + '</span>';
+                            html += '</div>';
+                            html += '<div class="mt-2">';
+                            html += '<small class="text-muted"><i class="bi bi-person me-1"></i>' + item.author + '</small>';
+                            html += '<span class="text-muted mx-2">|</span>';
+                            html += '<small class="text-muted"><i class="bi bi-calendar me-1"></i>' + item.date + '</small>';
+                            html += '</div>';
+                            if (item.comment) {
+                                html += '<div class="mt-1 text-muted small">' + item.comment + '</div>';
+                            }
+                            html += '</a>';
+                        });
+                        html += '<div class="p-2 bg-light text-center border-top">';
+                        html += '<small class="text-muted">Enter барои ҷустуҷӯи пурра</small>';
+                        html += '</div>';
+                        searchResults.innerHTML = html;
+                    }
+                    searchResults.style.display = 'block';
+                })
+                .catch(function(error) {
+                    console.error('Search error:', error);
+                });
+        }, 300);
+    });
+    
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchResults.style.display = 'none';
+            filterForm.submit();
+        }
+        if (e.key === 'Escape') {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    searchResults.addEventListener('mouseover', function(e) {
+        var item = e.target.closest('.search-result-item');
+        if (item) {
+            item.style.backgroundColor = '#f8f9fa';
+        }
+    });
+    
+    searchResults.addEventListener('mouseout', function(e) {
+        var item = e.target.closest('.search-result-item');
+        if (item) {
+            item.style.backgroundColor = '';
+        }
+    });
 });
 </script>
+<style>
+.search-result-item:hover {
+    background-color: #f8f9fa;
+}
+#searchResults {
+    scrollbar-width: thin;
+}
+#searchResults::-webkit-scrollbar {
+    width: 6px;
+}
+#searchResults::-webkit-scrollbar-thumb {
+    background-color: #0891b2;
+    border-radius: 3px;
+}
+</style>
 {% endblock %}
