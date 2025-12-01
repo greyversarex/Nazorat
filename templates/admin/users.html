@@ -32,8 +32,10 @@
             <tr>
                 <td data-label="#">{{ user.id }}</td>
                 <td data-label="ФИО">
-                    <i class="bi bi-person-circle me-2 text-primary"></i>
-                    {{ user.full_name or '-' }}
+                    <a href="{{ url_for('admin.user_requests', id=user.id) }}" class="text-decoration-none text-dark user-link">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>
+                        <span class="fw-medium">{{ user.full_name or '-' }}</span>
+                    </a>
                 </td>
                 <td data-label="Логин">
                     <code>{{ user.username }}</code>
@@ -51,7 +53,9 @@
                     </small>
                 </td>
                 <td data-label="Дархостҳо">
-                    <span class="badge bg-info">{{ user.requests|length }}</span>
+                    <a href="{{ url_for('admin.user_requests', id=user.id) }}" class="text-decoration-none">
+                        <span class="badge bg-info">{{ user.requests|length }}</span>
+                    </a>
                 </td>
                 <td>
                     <div class="btn-group btn-group-sm">

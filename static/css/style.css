@@ -547,3 +547,15 @@ input[type="file"]::file-selector-button:hover {
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-dark);
 }
+
+.user-link {
+    transition: color 0.2s ease;
+}
+
+.user-link:hover {
+    color: var(--accent-color) !important;
+}
+
+.user-link:hover span {
+    text-decoration: underline;
+}

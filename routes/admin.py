@@ -143,6 +143,15 @@ def users():
     users = User.query.order_by(User.created_at.desc()).all()
     return render_template('admin/users.html', users=users)
 
+@admin_bp.route('/users/<int:id>/requests')
+@login_required
+@admin_required
+def user_requests(id):
+    user = User.query.get_or_404(id)
+    requests_list = Request.query.filter_by(user_id=id).order_by(Request.created_at.desc()).all()
+    topics = Topic.query.order_by(Topic.title).all()
+    return render_template('admin/user_requests.html', user=user, requests=requests_list, topics=topics)
+
 @admin_bp.route('/users/create', methods=['GET', 'POST'])
 @login_required
 @admin_required
