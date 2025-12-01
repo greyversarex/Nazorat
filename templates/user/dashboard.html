@@ -16,12 +16,15 @@
     <div class="col">
         <div class="card h-100 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="badge bg-secondary">{{ req.topic.title }}</span>
+                <span class="badge bg-primary">{{ req.reg_number or '#' ~ req.id }}</span>
                 <span class="badge bg-{{ req.get_status_class() }}">
                     {{ req.get_status_label() }}
                 </span>
             </div>
             <div class="card-body">
+                <div class="mb-2">
+                    <span class="badge bg-secondary">{{ req.topic.title }}</span>
+                </div>
                 <p class="card-text">
                     {{ req.comment[:100] if req.comment else 'Шарҳ нест' }}
                     {% if req.comment and req.comment|length > 100 %}...{% endif %}

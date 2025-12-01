@@ -43,6 +43,7 @@ class Request(db.Model):
     __tablename__ = 'requests'
     
     id = db.Column(db.Integer, primary_key=True)
+    reg_number = db.Column(db.String(20), unique=True, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     topic_id = db.Column(db.Integer, db.ForeignKey('topics.id'), nullable=False)
     latitude = db.Column(db.Float, nullable=True)
@@ -53,6 +54,26 @@ class Request(db.Model):
     reply = db.Column(db.Text, nullable=True)
     replied_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    @staticmethod
+    def generate_reg_number():
+        """Generate registration number like NAZ-2025-0001"""
+        from datetime import datetime
+        year = datetime.now().year
+        last_request = Request.query.filter(
+            Request.reg_number.like(f'NAZ-{year}-%')
+        ).order_by(Request.id.desc()).first()
+        
+        if last_request and last_request.reg_number:
+            try:
+                last_num = int(last_request.reg_number.split('-')[-1])
+                new_num = last_num + 1
+            except:
+                new_num = 1
+        else:
+            new_num = 1
+        
+        return f'NAZ-{year}-{new_num:04d}'
     
     STATUS_LABELS = {
         'under_review': 'Дар тафтиш',

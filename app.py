@@ -62,6 +62,38 @@ def migrate_add_reply_fields():
         db.session.rollback()
         print(f'Migration reply fields: {e}')
 
+def migrate_add_reg_number():
+    from sqlalchemy import inspect, text
+    from models import Request
+    from datetime import datetime
+    try:
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        if 'requests' not in tables:
+            return
+        columns = [col['name'] for col in inspector.get_columns('requests')]
+        
+        if 'reg_number' not in columns:
+            db.session.execute(text("ALTER TABLE requests ADD COLUMN reg_number VARCHAR(20) UNIQUE"))
+            db.session.commit()
+            print('Migration: Added reg_number column to requests')
+        
+        requests_without_reg = Request.query.filter(Request.reg_number.is_(None)).order_by(Request.id).all()
+        for req in requests_without_reg:
+            year = req.created_at.year if req.created_at else datetime.now().year
+            count = Request.query.filter(
+                Request.reg_number.like(f'NAZ-{year}-%'),
+                Request.id < req.id
+            ).count() + 1
+            req.reg_number = f'NAZ-{year}-{count:04d}'
+        
+        if requests_without_reg:
+            db.session.commit()
+            print(f'Migration: Generated reg_numbers for {len(requests_without_reg)} existing requests')
+    except Exception as e:
+        db.session.rollback()
+        print(f'Migration reg_number: {e}')
+
 def create_default_admin():
     from models import User
     admin = User.query.filter_by(username='admin').first()
@@ -133,6 +165,7 @@ def create_app():
         migrate_add_user_full_name()
         migrate_nullable_user_id()
         migrate_add_reply_fields()
+        migrate_add_reg_number()
         create_default_admin()
     
     return app

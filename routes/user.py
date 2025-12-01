@@ -2,6 +2,7 @@ import os
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
+from sqlalchemy.exc import IntegrityError
 from models import Topic, Request
 from extensions import db
 import uuid
@@ -70,11 +71,22 @@ def create_request():
             longitude=longitude,
             comment=comment,
             media_filename=media_filename,
-            status='new'
+            status='under_review'
         )
         
-        db.session.add(new_request)
-        db.session.commit()
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                new_request.reg_number = Request.generate_reg_number()
+                db.session.add(new_request)
+                db.session.commit()
+                break
+            except IntegrityError:
+                db.session.rollback()
+                if attempt == max_retries - 1:
+                    new_request.reg_number = f'NAZ-{uuid.uuid4().hex[:8].upper()}'
+                    db.session.add(new_request)
+                    db.session.commit()
         
         flash('Дархости шумо бо муваффақият фиристода шуд!', 'success')
         return redirect(url_for('user.dashboard'))

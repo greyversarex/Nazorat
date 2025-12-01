@@ -39,7 +39,7 @@
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
-                <th>#</th>
+                <th>Рақами қайд</th>
                 <th>Мавзӯъ</th>
                 <th>Шарҳ</th>
                 <th>Сана</th>
@@ -50,7 +50,7 @@
         <tbody>
             {% for req in requests %}
             <tr class="request-row" data-href="{{ url_for('user.view_request', id=req.id) }}" style="cursor: pointer;">
-                <td data-label="#">{{ req.id }}</td>
+                <td data-label="Рақами қайд"><span class="badge bg-primary">{{ req.reg_number or '#' ~ req.id }}</span></td>
                 <td data-label="Мавзӯъ">
                     <span class="badge" style="background-color: {{ req.topic.color }}">{{ req.topic.title }}</span>
                 </td>
@@ -109,7 +109,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Оё мутмаин ҳастед, ки мехоҳед дархости <strong>#{{ req.id }}</strong>-ро нест кунед?</p>
+                <p>Оё мутмаин ҳастед, ки мехоҳед дархости <strong>{{ req.reg_number or '#' ~ req.id }}</strong>-ро нест кунед?</p>
                 <p class="text-danger mb-0"><small>Ин амал бозгашт надорад!</small></p>
             </div>
             <div class="modal-footer">
