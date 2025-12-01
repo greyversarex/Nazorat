@@ -76,6 +76,26 @@ class Request(db.Model):
         
         return f'NAZ-{year}-{new_num:04d}'
     
+    @staticmethod
+    def generate_document_number():
+        """Generate document number like DOC-2025-0001"""
+        from datetime import datetime
+        year = datetime.now().year
+        last_request = Request.query.filter(
+            Request.document_number.like(f'DOC-{year}-%')
+        ).order_by(Request.id.desc()).first()
+        
+        if last_request and last_request.document_number:
+            try:
+                last_num = int(last_request.document_number.split('-')[-1])
+                new_num = last_num + 1
+            except:
+                new_num = 1
+        else:
+            new_num = 1
+        
+        return f'DOC-{year}-{new_num:04d}'
+    
     STATUS_LABELS = {
         'under_review': 'Дар тафтиш',
         'completed': 'Иҷро шуд'

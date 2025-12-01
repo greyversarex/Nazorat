@@ -79,6 +79,11 @@ The app runs on port 5000.
 3. **Password Hashing**: bcrypt for secure password storage
 4. **Session Management**: Flask-Login with secure session handling
 
+## Request Numbering
+- **Registration Number (reg_number)**: Auto-generated as NAZ-YYYY-NNNN (e.g., NAZ-2025-0001)
+- **Document Number (document_number)**: Auto-generated as DOC-YYYY-NNNN (e.g., DOC-2025-0001)
+- Both numbers are generated atomically with retry mechanism to prevent duplicates
+
 ## Recent Changes
 - November 2024: Initial implementation with all core features
 - November 2025: Added CSRF protection and open redirect vulnerability fix
@@ -96,3 +101,5 @@ The app runs on port 5000.
 - December 2025: New SVG favicon with shield/camera design matching brand identity
 - December 2025: Updated PWA icons with new shield/camera design for mobile install
 - December 2025: Added ProxyFix middleware for proper URL handling with custom domains
+- December 2025: Added live search with autocomplete on admin dashboard (searches by reg_number, document_number, username, topic, comment)
+- December 2025: Document number (DOC-YYYY-NNNN) is now auto-generated alongside registration number

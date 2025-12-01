@@ -38,7 +38,6 @@ def create_request():
     
     if request.method == 'POST':
         topic_id = request.form.get('topic_id', type=int)
-        document_number = request.form.get('document_number', '').strip() or None
         latitude = request.form.get('latitude', type=float)
         longitude = request.form.get('longitude', type=float)
         comment = request.form.get('comment', '').strip()
@@ -68,7 +67,6 @@ def create_request():
         new_request = Request(
             user_id=current_user.id,
             topic_id=topic_id,
-            document_number=document_number,
             latitude=latitude,
             longitude=longitude,
             comment=comment,
@@ -80,6 +78,7 @@ def create_request():
         for attempt in range(max_retries):
             try:
                 new_request.reg_number = Request.generate_reg_number()
+                new_request.document_number = Request.generate_document_number()
                 db.session.add(new_request)
                 db.session.commit()
                 break
@@ -87,6 +86,7 @@ def create_request():
                 db.session.rollback()
                 if attempt == max_retries - 1:
                     new_request.reg_number = f'NAZ-{uuid.uuid4().hex[:8].upper()}'
+                    new_request.document_number = f'DOC-{uuid.uuid4().hex[:8].upper()}'
                     db.session.add(new_request)
                     db.session.commit()
         
