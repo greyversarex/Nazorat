@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 from extensions import db, bcrypt, login_manager, csrf
 
 def migrate_add_topic_color():
@@ -123,6 +124,8 @@ def create_app():
         elif 'text/css' in response.content_type or 'application/javascript' in response.content_type:
             response.headers['Cache-Control'] = 'no-cache, must-revalidate'
         return response
+    
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
     with app.app_context():
         db.create_all()
