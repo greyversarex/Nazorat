@@ -83,7 +83,29 @@
         <tbody>
             {% for req in requests %}
             <tr class="request-row" data-href="{{ url_for('user.view_request', id=req.id) }}" style="cursor: pointer;">
-                <td data-label="Рақами қайд"><span class="badge bg-primary">{{ req.reg_number or '#' ~ req.id }}</span></td>
+                <td data-label="Рақами қайд" class="reg-number-cell" onclick="event.stopPropagation();">
+                    <span class="badge bg-primary reg-number-badge" 
+                          data-id="{{ req.id }}" 
+                          data-value="{{ req.reg_number or '' }}"
+                          title="Клик барои таҳрир"
+                          style="cursor: pointer;">
+                        <i class="bi bi-pencil me-1" style="font-size: 0.7em;"></i>{{ req.reg_number or '#' ~ req.id }}
+                    </span>
+                    <div class="reg-number-edit d-none" data-id="{{ req.id }}">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control form-control-sm reg-number-input" 
+                                   value="{{ req.reg_number or '' }}" 
+                                   data-id="{{ req.id }}"
+                                   style="min-width: 120px;">
+                            <button class="btn btn-success btn-sm save-reg-number" data-id="{{ req.id }}" type="button">
+                                <i class="bi bi-check"></i>
+                            </button>
+                            <button class="btn btn-secondary btn-sm cancel-reg-number" data-id="{{ req.id }}" type="button">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </td>
                 <td data-label="Мавзӯъ">
                     <span class="badge bg-secondary">{{ req.topic.title }}</span>
                 </td>
@@ -165,11 +187,99 @@ document.addEventListener('DOMContentLoaded', function() {
     var rows = document.querySelectorAll('.request-row');
     rows.forEach(function(row) {
         row.addEventListener('click', function(e) {
-            if (!e.target.closest('.actions-cell')) {
+            if (!e.target.closest('.actions-cell') && !e.target.closest('.reg-number-cell')) {
                 window.location.href = this.getAttribute('data-href');
             }
         });
     });
+    
+    var csrfToken = '{{ csrf_token() }}';
+    
+    document.querySelectorAll('.reg-number-badge').forEach(function(badge) {
+        badge.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var id = this.getAttribute('data-id');
+            var editDiv = document.querySelector('.reg-number-edit[data-id="' + id + '"]');
+            var input = editDiv.querySelector('.reg-number-input');
+            
+            this.classList.add('d-none');
+            editDiv.classList.remove('d-none');
+            input.focus();
+            input.select();
+        });
+    });
+    
+    document.querySelectorAll('.save-reg-number').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
+            saveRegNumber(id);
+        });
+    });
+    
+    document.querySelectorAll('.cancel-reg-number').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
+            cancelEdit(id);
+        });
+    });
+    
+    document.querySelectorAll('.reg-number-input').forEach(function(input) {
+        input.addEventListener('keydown', function(e) {
+            var id = this.getAttribute('data-id');
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveRegNumber(id);
+            } else if (e.key === 'Escape') {
+                cancelEdit(id);
+            }
+        });
+    });
+    
+    function saveRegNumber(id) {
+        var editDiv = document.querySelector('.reg-number-edit[data-id="' + id + '"]');
+        var badge = document.querySelector('.reg-number-badge[data-id="' + id + '"]');
+        var input = editDiv.querySelector('.reg-number-input');
+        var newValue = input.value.trim();
+        
+        if (!newValue) {
+            alert('Рақами қайд холӣ аст');
+            return;
+        }
+        
+        var formData = new FormData();
+        formData.append('reg_number', newValue);
+        formData.append('csrf_token', csrfToken);
+        
+        fetch('/admin/requests/' + id + '/update-reg-number', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                badge.innerHTML = '<i class="bi bi-pencil me-1" style="font-size: 0.7em;"></i>' + data.reg_number;
+                badge.setAttribute('data-value', data.reg_number);
+                editDiv.classList.add('d-none');
+                badge.classList.remove('d-none');
+            } else {
+                alert(data.error || 'Хато дар нигоҳдорӣ');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Хато дар нигоҳдорӣ');
+        });
+    }
+    
+    function cancelEdit(id) {
+        var editDiv = document.querySelector('.reg-number-edit[data-id="' + id + '"]');
+        var badge = document.querySelector('.reg-number-badge[data-id="' + id + '"]');
+        var input = editDiv.querySelector('.reg-number-input');
+        
+        input.value = badge.getAttribute('data-value');
+        editDiv.classList.add('d-none');
+        badge.classList.remove('d-none');
+    }
     
     var searchInput = document.getElementById('searchInput');
     var searchResults = document.getElementById('searchResults');

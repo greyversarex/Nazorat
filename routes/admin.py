@@ -331,6 +331,25 @@ def delete_user(id):
     
     return redirect(url_for('admin.users'))
 
+@admin_bp.route('/requests/<int:id>/update-reg-number', methods=['POST'])
+@login_required
+@admin_required
+def update_reg_number(id):
+    req = Request.query.get_or_404(id)
+    new_reg_number = request.form.get('reg_number', '').strip()
+    
+    if not new_reg_number:
+        return jsonify({'success': False, 'error': 'Рақами қайд холӣ аст'}), 400
+    
+    existing = Request.query.filter(Request.reg_number == new_reg_number, Request.id != id).first()
+    if existing:
+        return jsonify({'success': False, 'error': 'Ин рақам аллакай истифода шудааст'}), 400
+    
+    req.reg_number = new_reg_number
+    db.session.commit()
+    
+    return jsonify({'success': True, 'reg_number': new_reg_number})
+
 @admin_bp.route('/requests/<int:id>/delete', methods=['POST'])
 @login_required
 @admin_required
