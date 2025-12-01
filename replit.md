@@ -92,3 +92,7 @@ The app runs on port 5000.
 - November 2025: Mobile-responsive tables (card layout on small screens)
 - November 2025: Migrated from SQLite to PostgreSQL for reliable data persistence
 - November 2025: Added Statistics (Омор) page with interactive charts, date filtering, and visual analytics
+- December 2025: Added clickable user names in admin panel to view all requests by specific user
+- December 2025: New SVG favicon with shield/camera design matching brand identity
+- December 2025: Updated PWA icons with new shield/camera design for mobile install
+- December 2025: Added ProxyFix middleware for proper URL handling with custom domains
