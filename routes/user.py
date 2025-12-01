@@ -61,7 +61,7 @@ def create_request():
                 file.save(file_path)
                 media_filename = unique_filename
             elif file and file.filename and not allowed_file(file.filename):
-                flash('Формати файл иҷозат дода нашудааст. Танҳо расм ва видео иҷозат аст.', 'danger')
+                flash('Формати файл иҷозат дода нашудааст. Танҳо расм, видео ва ҳуҷҷатҳо (PDF, DOC) иҷозат аст.', 'danger')
                 return render_template('user/create_request.html', topics=topics)
         
         new_request = Request(
