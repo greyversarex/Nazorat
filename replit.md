@@ -84,6 +84,19 @@ The app runs on port 5000.
 - **Document Number (document_number)**: Auto-generated as DOC-YYYY-NNNN (e.g., DOC-2025-0001)
 - Both numbers are generated atomically with retry mechanism to prevent duplicates
 
+## Admin Panel Structure
+- **Панели Админ (Admin Home)**: Shows worker cards with unread protocol counters
+- **Протоколҳо (Protocols)**: All requests table with search/filter (formerly Dashboard)
+- **Омор (Statistics)**: Analytics with charts and download options (Word/Excel)
+- **Харита (Map)**: Geographic view of all requests
+- **Мавзӯъҳо (Topics)**: Manage request topics
+- **Корбарон (Workers)**: Manage users
+
+## Statistics Export
+- Download statistics in Word (.docx) or Excel (.xlsx) format
+- Available from both general statistics page and individual worker pages
+- Includes request counts, completion rates, and topic breakdowns
+
 ## Recent Changes
 - November 2024: Initial implementation with all core features
 - November 2025: Added CSRF protection and open redirect vulnerability fix
@@ -103,3 +116,9 @@ The app runs on port 5000.
 - December 2025: Added ProxyFix middleware for proper URL handling with custom domains
 - December 2025: Added live search with autocomplete on admin dashboard (searches by reg_number, document_number, username, topic, comment)
 - December 2025: Document number (DOC-YYYY-NNNN) is now auto-generated alongside registration number
+- December 2025: Added file upload support for WEBP images
+- December 2025: Redesigned admin homepage with worker cards showing unread protocol counters
+- December 2025: Moved protocols table to dedicated "Протоколҳо" page
+- December 2025: Added admin_read_at field for tracking read status of requests
+- December 2025: Added statistics download feature in Word and Excel formats
+- December 2025: Worker statistics download available from user requests page
