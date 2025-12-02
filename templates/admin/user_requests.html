@@ -10,7 +10,17 @@
         </a>
         <h2><i class="bi bi-person-lines-fill me-2"></i>Дархостҳои {{ user.full_name or user.username }}</h2>
     </div>
-    <span class="badge bg-primary fs-6">{{ requests|length }} дархост</span>
+    <div>
+        <div class="btn-group me-2">
+            <a href="{{ url_for('admin.download_user_statistics', id=user.id, format='word') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-file-earmark-word me-1"></i>Word
+            </a>
+            <a href="{{ url_for('admin.download_user_statistics', id=user.id, format='excel') }}" class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+        </div>
+        <span class="badge bg-primary fs-6">{{ requests|length }} дархост</span>
+    </div>
 </div>
 
 <div class="card mb-4">

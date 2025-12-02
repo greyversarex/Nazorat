@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Протоколҳо - Nazorat{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-journal-text me-2"></i>Протоколҳо</h2>
+    <span class="badge bg-primary fs-6">{{ requests|length }} дархост</span>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="position-relative">
+                    <label for="searchInput" class="form-label">
+                        <i class="bi bi-search me-1"></i>Ҷустуҷӯ
+                    </label>
+                    <input type="text" 
+                           class="form-control form-control-lg" 
+                           id="searchInput" 
+                           placeholder="Ҷустуҷӯ аз рӯи рақам, ном, мавзӯъ, шарҳ..."
+                           value="{{ search_query or '' }}"
+                           autocomplete="off">
+                    <div id="searchResults" class="position-absolute w-100 bg-white border rounded-3 shadow-lg mt-1" style="display: none; z-index: 1050; max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+        <form method="GET" action="{{ url_for('admin.protocols') }}" id="filterForm" class="row g-3 align-items-end">
+            <input type="hidden" name="q" id="searchQueryHidden" value="{{ search_query or '' }}">
+            <div class="col-md-4">
+                <label for="topic" class="form-label">Филтр аз рӯи мавзӯъ</label>
+                <select class="form-select" id="topic" name="topic">
+                    <option value="">Ҳамаи мавзӯъҳо</option>
+                    {% for topic in topics %}
+                        <option value="{{ topic.id }}" {% if selected_topic == topic.id %}selected{% endif %}>
+                            {{ topic.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Филтр аз рӯи ҳолат</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Ҳамаи ҳолатҳо</option>
+                    {% for status_key, status_label in statuses.items() %}
+                        <option value="{{ status_key }}" {% if selected_status == status_key %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel me-1"></i>Филтр
+                </button>
+            </div>
+            {% if selected_topic or selected_status or search_query %}
+            <div class="col-md-2">
+                <a href="{{ url_for('admin.protocols') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Пок кардан
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% if requests %}
+<div class="table-responsive" style="overflow: visible;">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Рақами қайд</th>
+                <th>Мавзӯъ</th>
+                <th>Корбар</th>
+                <th>Шарҳ</th>
+                <th>Сана</th>
+                <th>Ҳолат</th>
+                <th>Амалҳо</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr class="request-row {% if not req.admin_read_at %}table-info{% endif %}" data-href="{{ url_for('user.view_request', id=req.id) }}" data-id="{{ req.id }}" style="cursor: pointer;">
+                <td data-label="Рақами қайд" class="reg-number-cell" onclick="event.stopPropagation();">
+                    <span class="badge bg-primary reg-number-badge" 
+                          data-id="{{ req.id }}" 
+                          data-value="{{ req.reg_number or '' }}"
+                          title="Клик барои таҳрир"
+                          style="cursor: pointer;">
+                        <i class="bi bi-pencil me-1" style="font-size: 0.7em;"></i>{{ req.reg_number or '#' ~ req.id }}
+                    </span>
+                    {% if not req.admin_read_at %}
+                    <span class="badge bg-danger ms-1" title="Нахонда"><i class="bi bi-circle-fill" style="font-size: 0.5em;"></i></span>
+                    {% endif %}
+                    <div class="reg-number-edit d-none" data-id="{{ req.id }}">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control form-control-sm reg-number-input" 
+                                   value="{{ req.reg_number or '' }}" 
+                                   data-id="{{ req.id }}"
+                                   style="min-width: 120px;">
+                            <button class="btn btn-success btn-sm save-reg-number" data-id="{{ req.id }}" type="button">
+                                <i class="bi bi-check"></i>
+                            </button>
+                            <button class="btn btn-secondary btn-sm cancel-reg-number" data-id="{{ req.id }}" type="button">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </td>
+                <td data-label="Мавзӯъ">
+                    <span class="badge bg-secondary">{{ req.topic.title }}</span>
+                </td>
+                <td data-label="Корбар">{% if req.author %}{{ req.author.username }}{% else %}<span class="text-muted fst-italic">Нест шуд</span>{% endif %}</td>
+                <td data-label="Шарҳ">
+                    {{ req.comment[:50] }}{% if req.comment|length > 50 %}...{% endif %}
+                </td>
+                <td data-label="Сана">
+                    <small class="text-muted">
+                        {{ req.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </small>
+                </td>
+                <td data-label="Ҳолат">
+                    <span class="badge bg-{{ req.get_status_class() }}">
+                        {{ req.get_status_label() }}
+                    </span>
+                </td>
+                <td class="actions-cell" onclick="event.stopPropagation();">
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('user.view_request', id=req.id) }}#reply-section" 
+                           class="btn btn-outline-primary" 
+                           title="Ҷавоб додан">
+                            <i class="bi bi-reply"></i>
+                        </a>
+                        <button type="button" 
+                                class="btn btn-outline-danger" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteRequestModal{{ req.id }}"
+                                title="Нест кардан">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% for req in requests %}
+<div class="modal fade" id="deleteRequestModal{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Нест кардани дархост
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Оё мутмаин ҳастед, ки мехоҳед дархости <strong>{{ req.reg_number or '#' ~ req.id }}</strong>-ро нест кунед?</p>
+                <p class="text-danger mb-0"><small>Ин амал бозгашт надорад!</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Бекор</button>
+                <form method="POST" action="{{ url_for('admin.delete_request', id=req.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Нест кардан
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-inbox display-1 text-muted"></i>
+    <h4 class="mt-3 text-muted">Дархостҳо ёфт нашуданд</h4>
+    <p class="text-muted">Ҳоло ягон дархост нест</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var csrfToken = '{{ csrf_token() }}';
+    
+    var rows = document.querySelectorAll('.request-row');
+    rows.forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.actions-cell') && !e.target.closest('.reg-number-cell')) {
+                var requestId = this.getAttribute('data-id');
+                fetch('/admin/requests/' + requestId + '/mark-read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                window.location.href = this.getAttribute('data-href');
+            }
+        });
+    });
+    
+    document.querySelectorAll('.reg-number-badge').forEach(function(badge) {
+        badge.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var id = this.getAttribute('data-id');
+            var editDiv = document.querySelector('.reg-number-edit[data-id="' + id + '"]');
+            var input = editDiv.querySelector('.reg-number-input');
+            
+            this.classList.add('d-none');
+            editDiv.classList.remove('d-none');
+            input.focus();
+            input.select();
+        });
+    });
+    
+    document.querySelectorAll('.save-reg-number').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
+            saveRegNumber(id);
+        });
+    });
+    
+    document.querySelectorAll('.cancel-reg-number').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
+            cancelEdit(id);
+        });
+    });
+    
+    document.querySelectorAll('.reg-number-input').forEach(function(input) {
+        input.addEventListener('keydown', function(e) {
+            var id = this.getAttribute('data-id');
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveRegNumber(id);
+            } else if (e.key === 'Escape') {
+                cancelEdit(id);
+            }
+        });
+    });
+    
+    function saveRegNumber(id) {
+        var editDiv = document.querySelector('.reg-number-edit[data-id="' + id + '"]');
+        var badge = document.querySelector('.reg-number-badge[data-id="' + id + '"]');
+        var input = editDiv.querySelector('.reg-number-input');
+        var newValue = input.value.trim();
+        
+        if (!newValue) {
+            alert('Рақами қайд холӣ аст');
+            return;
+        }
+        
+        var formData = new FormData();
+        formData.append('reg_number', newValue);
+        formData.append('csrf_token', csrfToken);
+        
+        fetch('/admin/requests/' + id + '/update-reg-number', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                badge.innerHTML = '<i class="bi bi-pencil me-1" style="font-size: 0.7em;"></i>' + data.reg_number;
+                badge.setAttribute('data-value', data.reg_number);
+                editDiv.classList.add('d-none');
+                badge.classList.remove('d-none');
+            } else {
+                alert(data.error || 'Хато дар нигоҳдорӣ');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Хато дар нигоҳдорӣ');
+        });
+    }
+    
+    function cancelEdit(id) {
+        var editDiv = document.querySelector('.reg-number-edit[data-id="' + id + '"]');
+        var badge = document.querySelector('.reg-number-badge[data-id="' + id + '"]');
+        var input = editDiv.querySelector('.reg-number-input');
+        
+        input.value = badge.getAttribute('data-value');
+        editDiv.classList.add('d-none');
+        badge.classList.remove('d-none');
+    }
+    
+    var searchInput = document.getElementById('searchInput');
+    var searchResults = document.getElementById('searchResults');
+    var searchQueryHidden = document.getElementById('searchQueryHidden');
+    var filterForm = document.getElementById('filterForm');
+    var debounceTimer;
+    
+    searchInput.addEventListener('input', function() {
+        var query = this.value.trim();
+        searchQueryHidden.value = query;
+        
+        clearTimeout(debounceTimer);
+        
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        debounceTimer = setTimeout(function() {
+            fetch('/admin/search?q=' + encodeURIComponent(query))
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.length === 0) {
+                        searchResults.innerHTML = '<div class="p-3 text-muted text-center"><i class="bi bi-search me-2"></i>Натиҷа ёфт нашуд</div>';
+                    } else {
+                        var html = '';
+                        data.forEach(function(item) {
+                            html += '<a href="/user/requests/' + item.id + '" class="d-block p-3 text-decoration-none border-bottom search-result-item" style="color: inherit;">';
+                            html += '<div class="d-flex justify-content-between align-items-start">';
+                            html += '<div>';
+                            html += '<span class="badge bg-primary me-2">' + item.reg_number + '</span>';
+                            if (item.document_number) {
+                                html += '<span class="badge bg-secondary me-1">' + item.document_number + '</span>';
+                            }
+                            html += '<span class="badge bg-info">' + item.topic + '</span>';
+                            html += '</div>';
+                            html += '<span class="badge bg-' + item.status_class + '">' + item.status + '</span>';
+                            html += '</div>';
+                            html += '<div class="mt-2">';
+                            html += '<small class="text-muted"><i class="bi bi-person me-1"></i>' + item.author + '</small>';
+                            html += '<span class="text-muted mx-2">|</span>';
+                            html += '<small class="text-muted"><i class="bi bi-calendar me-1"></i>' + item.date + '</small>';
+                            html += '</div>';
+                            if (item.comment) {
+                                html += '<div class="mt-1 text-muted small">' + item.comment + '</div>';
+                            }
+                            html += '</a>';
+                        });
+                        html += '<div class="p-2 bg-light text-center border-top">';
+                        html += '<small class="text-muted">Enter барои ҷустуҷӯи пурра</small>';
+                        html += '</div>';
+                        searchResults.innerHTML = html;
+                    }
+                    searchResults.style.display = 'block';
+                })
+                .catch(function(error) {
+                    console.error('Search error:', error);
+                });
+        }, 300);
+    });
+    
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchResults.style.display = 'none';
+            filterForm.submit();
+        }
+        if (e.key === 'Escape') {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    searchResults.addEventListener('mouseover', function(e) {
+        var item = e.target.closest('.search-result-item');
+        if (item) {
+            item.style.backgroundColor = '#f8f9fa';
+        }
+    });
+    
+    searchResults.addEventListener('mouseout', function(e) {
+        var item = e.target.closest('.search-result-item');
+        if (item) {
+            item.style.backgroundColor = '';
+        }
+    });
+});
+</script>
+<style>
+.search-result-item:hover {
+    background-color: #f8f9fa;
+}
+#searchResults {
+    scrollbar-width: thin;
+}
+#searchResults::-webkit-scrollbar {
+    width: 6px;
+}
+#searchResults::-webkit-scrollbar-thumb {
+    background-color: #0891b2;
+    border-radius: 3px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Панели Админ - Nazorat{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2 me-2"></i>Панели Админ</h2>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="bi bi-info-circle-fill me-2 fs-4"></i>
+            <div>
+                Барои дидани ҳамаи протоколҳо ба саҳифаи <a href="{{ url_for('admin.protocols') }}" class="alert-link">Протоколҳо</a> гузаред.
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-4"><i class="bi bi-people-fill me-2"></i>Корбарон</h4>
+
+{% if worker_cards %}
+<div class="row g-4">
+    {% for worker in worker_cards %}
+    <div class="col-lg-3 col-md-4 col-sm-6">
+        <a href="{{ url_for('admin.user_requests', id=worker.id) }}" class="text-decoration-none">
+            <div class="worker-card position-relative">
+                {% if worker.unread_count > 0 %}
+                <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger notification-badge">
+                    {{ worker.unread_count }}
+                    <span class="visually-hidden">непрочитанных протоколов</span>
+                </span>
+                {% endif %}
+                
+                <div class="worker-icon">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                
+                <div class="worker-info">
+                    <h5 class="worker-name">{{ worker.full_name }}</h5>
+                    <p class="worker-username text-muted">@{{ worker.username }}</p>
+                </div>
+                
+                <div class="worker-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ worker.total_requests }}</span>
+                        <span class="stat-label">Дархостҳо</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value text-primary">{{ worker.unread_count }}</span>
+                        <span class="stat-label">Нав</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-people display-1 text-muted"></i>
+    <h4 class="mt-3 text-muted">Корбарон ёфт нашуданд</h4>
+    <p class="text-muted">Ҳоло ягон корбар (ғайр аз админ) нест</p>
+    <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary mt-2">
+        <i class="bi bi-plus-circle me-1"></i>Илова кардани корбар
+    </a>
+</div>
+{% endif %}
+
+<style>
+.worker-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    height: 100%;
+}
+
+.worker-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(8, 145, 178, 0.15);
+    border-color: #0891b2;
+}
+
+.notification-badge {
+    font-size: 0.85rem;
+    padding: 0.5em 0.75em;
+    animation: pulse 2s infinite;
+    z-index: 10;
+    top: -5px !important;
+    right: 5px !important;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.worker-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2.5rem;
+    box-shadow: 0 4px 15px rgba(8, 145, 178, 0.3);
+}
+
+.worker-info {
+    margin-bottom: 1rem;
+}
+
+.worker-name {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+}
+
+.worker-username {
+    font-size: 0.875rem;
+    margin-bottom: 0;
+}
+
+.worker-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 576px) {
+    .worker-card {
+        padding: 1rem;
+    }
+    
+    .worker-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.75rem;
+    }
+    
+    .worker-name {
+        font-size: 1rem;
+    }
+    
+    .worker-stats {
+        gap: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+}
+</style>
+{% endblock %}

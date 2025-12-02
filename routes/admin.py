@@ -27,42 +27,7 @@ def admin_required(f):
 @login_required
 @admin_required
 def dashboard():
-    topic_filter = request.args.get('topic', type=int)
-    status_filter = request.args.get('status', type=str)
-    search_query = request.args.get('q', '').strip()
-    
-    query = Request.query.order_by(Request.created_at.desc())
-    
-    if search_query:
-        search_term = f'%{search_query}%'
-        query = query.outerjoin(User, Request.user_id == User.id).outerjoin(Topic, Request.topic_id == Topic.id).filter(
-            db.or_(
-                Request.reg_number.ilike(search_term),
-                Request.document_number.ilike(search_term),
-                Request.comment.ilike(search_term),
-                User.username.ilike(search_term),
-                User.full_name.ilike(search_term),
-                Topic.title.ilike(search_term)
-            )
-        )
-    
-    if topic_filter:
-        query = query.filter(Request.topic_id == topic_filter)
-    
-    if status_filter and status_filter in Request.STATUS_LABELS:
-        query = query.filter(Request.status == status_filter)
-    
-    requests = query.all()
-    topics = Topic.query.order_by(Topic.title).all()
-    statuses = Request.STATUS_LABELS
-    
-    return render_template('admin/dashboard.html', 
-                         requests=requests, 
-                         topics=topics,
-                         statuses=statuses,
-                         selected_topic=topic_filter,
-                         selected_status=status_filter,
-                         search_query=search_query)
+    return redirect(url_for('admin.admin_home'))
 
 @admin_bp.route('/search')
 @login_required
@@ -191,7 +156,7 @@ def update_status(id):
     else:
         flash('Ҳолати нодуруст интихоб шуд.', 'danger')
     
-    return redirect(url_for('admin.dashboard'))
+    return redirect(url_for('admin.protocols'))
 
 @admin_bp.route('/users')
 @login_required
@@ -373,7 +338,7 @@ def delete_request(id):
     db.session.commit()
     flash('Дархост бо муваффақият нест карда шуд.', 'success')
     
-    return redirect(url_for('admin.dashboard'))
+    return redirect(url_for('admin.protocols'))
 
 @admin_bp.route('/requests/<int:id>/reply', methods=['POST'])
 @login_required
