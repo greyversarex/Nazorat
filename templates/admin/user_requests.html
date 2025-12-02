@@ -87,37 +87,41 @@
                     </span>
                 </td>
                 <td class="actions-cell" onclick="event.stopPropagation();">
-                    <div class="btn-group btn-group-sm">
+                    <div class="d-flex gap-1 align-items-center">
                         {% if req.get_effective_status() != 'completed' %}
                         <form method="POST" action="{{ url_for('admin.complete_request', id=req.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="redirect_to" value="{{ url_for('admin.user_requests', id=user.id) }}">
                             <button type="submit" 
-                                    class="btn btn-outline-success" 
-                                    title="Иҷро шуд">
+                                    class="btn btn-success btn-sm rounded-circle" 
+                                    title="Иҷро шуд"
+                                    style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                 <i class="bi bi-check-lg"></i>
                             </button>
                         </form>
                         {% else %}
-                        <button type="button" class="btn btn-success" disabled title="Иҷро шудааст">
-                            <i class="bi bi-check-lg"></i>
-                        </button>
+                        <span class="text-success" title="Иҷро шудааст" style="width: 32px; text-align: center;">
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                        </span>
                         {% endif %}
                         <a href="{{ url_for('user.view_request', id=req.id) }}" 
-                           class="btn btn-outline-primary" 
-                           title="Дидан">
+                           class="btn btn-outline-primary btn-sm rounded-circle" 
+                           title="Дидан"
+                           style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                             <i class="bi bi-eye"></i>
                         </a>
                         <a href="{{ url_for('user.view_request', id=req.id) }}#reply-section" 
-                           class="btn btn-outline-secondary" 
-                           title="Ҷавоб додан">
+                           class="btn btn-primary btn-sm rounded-circle" 
+                           title="Ҷавоб додан"
+                           style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                             <i class="bi bi-reply"></i>
                         </a>
                         <button type="button" 
-                                class="btn btn-outline-danger" 
+                                class="btn btn-outline-danger btn-sm rounded-circle" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#deleteRequestModal{{ req.id }}"
-                                title="Нест кардан">
+                                title="Нест кардан"
+                                style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
