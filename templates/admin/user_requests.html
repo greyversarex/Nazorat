@@ -62,9 +62,6 @@
             <tr class="request-row {% if req.get_effective_status() == 'new' %}table-info{% endif %}" data-href="{{ url_for('user.view_request', id=req.id) }}" style="cursor: pointer;">
                 <td data-label="Рақами қайд">
                     <span class="badge bg-primary">{{ req.reg_number or '#' ~ req.id }}</span>
-                    {% if req.get_effective_status() == 'new' %}
-                    <span class="badge bg-danger ms-1" title="Нав"><i class="bi bi-circle-fill" style="font-size: 0.5em;"></i></span>
-                    {% endif %}
                 </td>
                 <td data-label="Мавзӯъ">
                     <span class="badge" style="background-color: {{ req.topic.color }}">{{ req.topic.title }}</span>

@@ -91,9 +91,6 @@
                           style="cursor: pointer;">
                         <i class="bi bi-pencil me-1" style="font-size: 0.7em;"></i>{{ req.reg_number or '#' ~ req.id }}
                     </span>
-                    {% if req.get_effective_status() == 'new' %}
-                    <span class="badge bg-danger ms-1" title="Нав"><i class="bi bi-circle-fill" style="font-size: 0.5em;"></i></span>
-                    {% endif %}
                     <div class="reg-number-edit d-none" data-id="{{ req.id }}">
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control form-control-sm reg-number-input" 
