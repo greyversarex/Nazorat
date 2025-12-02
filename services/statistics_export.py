@@ -411,7 +411,16 @@ def create_protocol_word_document(request_data, media_path=None):
             doc.add_paragraph()
             doc.add_heading("Расм", level=1)
             try:
-                doc.add_picture(media_path, width=Inches(5))
+                from PIL import Image
+                img = Image.open(media_path)
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    img = img.convert('RGB')
+                
+                img_buffer = BytesIO()
+                img.save(img_buffer, format='JPEG', quality=90)
+                img_buffer.seek(0)
+                
+                doc.add_picture(img_buffer, width=Inches(5))
                 last_paragraph = doc.paragraphs[-1]
                 last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             except Exception as e:
