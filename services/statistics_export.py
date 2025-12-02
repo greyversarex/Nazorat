@@ -351,8 +351,10 @@ def create_worker_statistics_excel_document(worker_data, requests_list):
     return buffer
 
 
-def create_protocol_word_document(request_data):
+def create_protocol_word_document(request_data, media_path=None):
     """Create a Word document for a single protocol/request."""
+    import os
+    
     doc = Document()
     
     heading = doc.add_heading("ПРОТОКОЛ", 0)
@@ -401,6 +403,23 @@ def create_protocol_word_document(request_data):
         doc.add_paragraph(comment)
     else:
         doc.add_paragraph("Шарҳ нест")
+    
+    if media_path and os.path.exists(media_path):
+        ext = os.path.splitext(media_path)[1].lower()
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+        if ext in image_extensions:
+            doc.add_paragraph()
+            doc.add_heading("Расм", level=1)
+            try:
+                doc.add_picture(media_path, width=Inches(5))
+                last_paragraph = doc.paragraphs[-1]
+                last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            except Exception as e:
+                doc.add_paragraph(f"Расмро илова кардан имконнопазир: {str(e)}")
+        else:
+            doc.add_paragraph()
+            doc.add_heading("Файли замима", level=1)
+            doc.add_paragraph(f"Номи файл: {os.path.basename(media_path)}")
     
     if request_data.get('admin_reply'):
         doc.add_paragraph()

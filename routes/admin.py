@@ -702,7 +702,11 @@ def download_protocol(id):
         'admin_reply_at': req.replied_at.strftime('%d.%m.%Y %H:%M') if req.replied_at else ''
     }
     
-    buffer = create_protocol_word_document(request_data)
+    media_path = None
+    if req.media_filename:
+        media_path = os.path.join(current_app.root_path, 'static', 'uploads', req.media_filename)
+    
+    buffer = create_protocol_word_document(request_data, media_path)
     
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     safe_reg = (req.reg_number or f'protocol_{req.id}').replace('/', '-').replace(' ', '_')
