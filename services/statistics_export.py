@@ -349,3 +349,74 @@ def create_worker_statistics_excel_document(worker_data, requests_list):
     wb.save(buffer)
     buffer.seek(0)
     return buffer
+
+
+def create_protocol_word_document(request_data):
+    """Create a Word document for a single protocol/request."""
+    doc = Document()
+    
+    heading = doc.add_heading("ПРОТОКОЛ", 0)
+    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    reg_para = doc.add_paragraph()
+    reg_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    reg_run = reg_para.add_run(f"№ {request_data.get('reg_number', 'Н/Д')}")
+    reg_run.bold = True
+    reg_run.font.size = Pt(14)
+    
+    if request_data.get('document_number'):
+        doc_para = doc.add_paragraph()
+        doc_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        doc_run = doc_para.add_run(f"Рақами ҳуҷҷат: {request_data.get('document_number')}")
+        doc_run.font.size = Pt(11)
+    
+    doc.add_paragraph()
+    
+    info_table = doc.add_table(rows=6, cols=2)
+    info_table.style = 'Table Grid'
+    
+    info_data = [
+        ("Мавзӯъ", request_data.get('topic', '')),
+        ("Корбар", request_data.get('username', '')),
+        ("Санаи сохтан", request_data.get('created_at', '')),
+        ("Ҳолат", request_data.get('status_label', '')),
+        ("Координатҳо", request_data.get('coordinates', 'Нест')),
+        ("Санаи хондан", request_data.get('admin_read_at', 'Нахонда')),
+    ]
+    
+    for i, (label, value) in enumerate(info_data):
+        cell_label = info_table.rows[i].cells[0]
+        cell_value = info_table.rows[i].cells[1]
+        cell_label.text = label
+        cell_value.text = str(value) if value else ''
+        for paragraph in cell_label.paragraphs:
+            for run in paragraph.runs:
+                run.bold = True
+    
+    doc.add_paragraph()
+    
+    doc.add_heading("Шарҳ", level=1)
+    comment = request_data.get('comment', '')
+    if comment:
+        doc.add_paragraph(comment)
+    else:
+        doc.add_paragraph("Шарҳ нест")
+    
+    if request_data.get('admin_reply'):
+        doc.add_paragraph()
+        doc.add_heading("Ҷавоби админ", level=1)
+        doc.add_paragraph(request_data.get('admin_reply'))
+        if request_data.get('admin_reply_at'):
+            reply_date = doc.add_paragraph(f"Санаи ҷавоб: {request_data.get('admin_reply_at')}")
+            reply_date.runs[0].italic = True
+    
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    footer = doc.add_paragraph(f"Санаи тайёр кардан: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+    footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer

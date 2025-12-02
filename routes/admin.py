@@ -10,7 +10,8 @@ from services.statistics_export import (
     create_statistics_word_document,
     create_statistics_excel_document,
     create_worker_statistics_word_document,
-    create_worker_statistics_excel_document
+    create_worker_statistics_excel_document,
+    create_protocol_word_document
 )
 
 admin_bp = Blueprint('admin', __name__)
@@ -675,6 +676,43 @@ def download_user_statistics(id, format):
     else:
         flash('Формати нодуруст интихоб шуд.', 'danger')
         return redirect(url_for('admin.user_requests', id=id))
+
+
+@admin_bp.route('/requests/<int:id>/download')
+@login_required
+@admin_required
+def download_protocol(id):
+    req = Request.query.get_or_404(id)
+    
+    coordinates = ''
+    if req.latitude and req.longitude:
+        coordinates = f"{req.latitude}, {req.longitude}"
+    
+    request_data = {
+        'reg_number': req.reg_number or f'#{req.id}',
+        'document_number': req.document_number or '',
+        'topic': req.topic.title if req.topic else '',
+        'username': req.author.full_name or req.author.username if req.author else 'Нест шуд',
+        'created_at': req.created_at.strftime('%d.%m.%Y %H:%M') if req.created_at else '',
+        'status_label': req.get_status_label(),
+        'coordinates': coordinates if coordinates else 'Нест',
+        'admin_read_at': req.admin_read_at.strftime('%d.%m.%Y %H:%M') if req.admin_read_at else 'Нахонда',
+        'comment': req.comment or '',
+        'admin_reply': req.admin_reply or '',
+        'admin_reply_at': req.admin_reply_at.strftime('%d.%m.%Y %H:%M') if req.admin_reply_at else ''
+    }
+    
+    buffer = create_protocol_word_document(request_data)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    safe_reg = (req.reg_number or f'protocol_{req.id}').replace('/', '-').replace(' ', '_')
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f'{safe_reg}_{timestamp}.docx',
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
 
 
 @admin_bp.route('/home')
