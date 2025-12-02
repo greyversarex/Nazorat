@@ -1,10 +1,16 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file
 from flask_login import login_required, current_user
 from functools import wraps
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from models import User, Topic, Request
 from extensions import db
+from services.statistics_export import (
+    create_statistics_word_document,
+    create_statistics_excel_document,
+    create_worker_statistics_word_document,
+    create_worker_statistics_excel_document
+)
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -521,3 +527,219 @@ def statistics():
                          completion_rate=completion_rate,
                          date_from=date_from,
                          date_to=date_to)
+
+
+@admin_bp.route('/statistics/download/<format>')
+@login_required
+@admin_required
+def download_statistics(format):
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    
+    query = Request.query
+    
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, '%Y-%m-%d')
+            query = query.filter(Request.created_at >= from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, '%Y-%m-%d') + timedelta(days=1)
+            query = query.filter(Request.created_at < to_date)
+        except ValueError:
+            pass
+    
+    total_requests = query.count()
+    completed_requests = query.filter(Request.status == 'completed').count()
+    under_review_requests = query.filter(Request.status == 'under_review').count()
+    
+    topics = Topic.query.all()
+    topic_stats = []
+    for topic in topics:
+        topic_query = query.filter(Request.topic_id == topic.id)
+        count = topic_query.count()
+        completed = topic_query.filter(Request.status == 'completed').count()
+        percentage = round((count / total_requests * 100), 1) if total_requests > 0 else 0
+        topic_stats.append({
+            'id': topic.id,
+            'title': topic.title,
+            'color': topic.color,
+            'count': count,
+            'completed': completed,
+            'pending': count - completed,
+            'percentage': percentage
+        })
+    
+    topic_stats.sort(key=lambda x: x['count'], reverse=True)
+    
+    total_users = User.query.filter(User.role == 'user').count()
+    total_admins = User.query.filter(User.role == 'admin').count()
+    completion_rate = round((completed_requests / total_requests * 100), 1) if total_requests > 0 else 0
+    
+    stats_data = {
+        'total_requests': total_requests,
+        'completed_requests': completed_requests,
+        'under_review_requests': under_review_requests,
+        'completion_rate': completion_rate,
+        'topic_stats': topic_stats,
+        'total_users': total_users,
+        'total_admins': total_admins
+    }
+    
+    date_range = None
+    if date_from and date_to:
+        date_range = f"{date_from} - {date_to}"
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    if format == 'word':
+        buffer = create_statistics_word_document(stats_data, date_range=date_range)
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f'omor_{timestamp}.docx',
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+    elif format == 'excel':
+        buffer = create_statistics_excel_document(stats_data, date_range=date_range)
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f'omor_{timestamp}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    else:
+        flash('Формати нодуруст интихоб шуд.', 'danger')
+        return redirect(url_for('admin.statistics'))
+
+
+@admin_bp.route('/users/<int:id>/statistics/download/<format>')
+@login_required
+@admin_required
+def download_user_statistics(id, format):
+    user = User.query.get_or_404(id)
+    
+    requests_list = Request.query.filter_by(user_id=id).order_by(Request.created_at.desc()).all()
+    
+    worker_data = {
+        'username': user.username,
+        'full_name': user.full_name or user.username,
+        'role': user.role,
+        'created_at': user.created_at.strftime('%d.%m.%Y') if user.created_at else ''
+    }
+    
+    requests_data = []
+    for req in requests_list:
+        requests_data.append({
+            'reg_number': req.reg_number or f'#{req.id}',
+            'topic': req.topic.title if req.topic else '',
+            'created_at': req.created_at.strftime('%d.%m.%Y %H:%M') if req.created_at else '',
+            'status': req.status,
+            'status_label': req.get_status_label(),
+            'comment': req.comment or ''
+        })
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    safe_username = user.username.replace(' ', '_')
+    
+    if format == 'word':
+        buffer = create_worker_statistics_word_document(worker_data, requests_data)
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f'omor_{safe_username}_{timestamp}.docx',
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+    elif format == 'excel':
+        buffer = create_worker_statistics_excel_document(worker_data, requests_data)
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f'omor_{safe_username}_{timestamp}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    else:
+        flash('Формати нодуруст интихоб шуд.', 'danger')
+        return redirect(url_for('admin.user_requests', id=id))
+
+
+@admin_bp.route('/home')
+@login_required
+@admin_required
+def admin_home():
+    workers = User.query.filter(User.role == 'user').order_by(User.full_name, User.username).all()
+    
+    worker_cards = []
+    for worker in workers:
+        unread_count = Request.query.filter(
+            Request.user_id == worker.id,
+            Request.admin_read_at.is_(None)
+        ).count()
+        
+        total_requests = Request.query.filter(Request.user_id == worker.id).count()
+        
+        worker_cards.append({
+            'id': worker.id,
+            'username': worker.username,
+            'full_name': worker.full_name or worker.username,
+            'unread_count': unread_count,
+            'total_requests': total_requests
+        })
+    
+    return render_template('admin/home.html', worker_cards=worker_cards)
+
+
+@admin_bp.route('/protocols')
+@login_required
+@admin_required
+def protocols():
+    topic_filter = request.args.get('topic', type=int)
+    status_filter = request.args.get('status', type=str)
+    search_query = request.args.get('q', '').strip()
+    
+    query = Request.query.order_by(Request.created_at.desc())
+    
+    if search_query:
+        search_term = f'%{search_query}%'
+        query = query.outerjoin(User, Request.user_id == User.id).outerjoin(Topic, Request.topic_id == Topic.id).filter(
+            db.or_(
+                Request.reg_number.ilike(search_term),
+                Request.document_number.ilike(search_term),
+                Request.comment.ilike(search_term),
+                User.username.ilike(search_term),
+                User.full_name.ilike(search_term),
+                Topic.title.ilike(search_term)
+            )
+        )
+    
+    if topic_filter:
+        query = query.filter(Request.topic_id == topic_filter)
+    
+    if status_filter and status_filter in Request.STATUS_LABELS:
+        query = query.filter(Request.status == status_filter)
+    
+    requests = query.all()
+    topics = Topic.query.order_by(Topic.title).all()
+    statuses = Request.STATUS_LABELS
+    
+    return render_template('admin/protocols.html', 
+                         requests=requests, 
+                         topics=topics,
+                         statuses=statuses,
+                         selected_topic=topic_filter,
+                         selected_status=status_filter,
+                         search_query=search_query)
+
+
+@admin_bp.route('/requests/<int:id>/mark-read', methods=['POST'])
+@login_required
+@admin_required
+def mark_request_read(id):
+    req = Request.query.get_or_404(id)
+    if req.admin_read_at is None:
+        req.admin_read_at = datetime.utcnow()
+        db.session.commit()
+    return jsonify({'success': True})
