@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Дархостҳои {{ user.full_name or user.username }} - Nazorat{% endblock %}
+{% block title %}Протоколҳои {{ user.full_name or user.username }} - Nazorat{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,7 +8,7 @@
         <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary btn-sm mb-2">
             <i class="bi bi-arrow-left me-1"></i>Ба корбарон
         </a>
-        <h2><i class="bi bi-person-lines-fill me-2"></i>Дархостҳои {{ user.full_name or user.username }}</h2>
+        <h2><i class="bi bi-person-lines-fill me-2"></i>Протоколҳои {{ user.full_name or user.username }}</h2>
     </div>
     <div>
         <div class="btn-group me-2">
@@ -19,7 +19,7 @@
                 <i class="bi bi-file-earmark-excel me-1"></i>Excel
             </a>
         </div>
-        <span class="badge bg-primary fs-6">{{ requests|length }} дархост</span>
+        <span class="badge bg-primary fs-6">{{ requests|length }} протокол</span>
     </div>
 </div>
 

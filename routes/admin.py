@@ -698,8 +698,8 @@ def download_protocol(id):
         'coordinates': coordinates if coordinates else 'Нест',
         'admin_read_at': req.admin_read_at.strftime('%d.%m.%Y %H:%M') if req.admin_read_at else 'Нахонда',
         'comment': req.comment or '',
-        'admin_reply': req.admin_reply or '',
-        'admin_reply_at': req.admin_reply_at.strftime('%d.%m.%Y %H:%M') if req.admin_reply_at else ''
+        'admin_reply': req.reply or '',
+        'admin_reply_at': req.replied_at.strftime('%d.%m.%Y %H:%M') if req.replied_at else ''
     }
     
     buffer = create_protocol_word_document(request_data)

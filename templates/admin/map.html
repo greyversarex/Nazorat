@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="badge" style="background-color: ${req.topic_color};">${req.topic_title}</span>
                     <span class="badge bg-${getStatusClass(req.status)}">${req.status_label}</span>
                 </div>
-                <p class="mb-1"><strong>Дархост #${req.id}</strong></p>
+                <p class="mb-1"><strong>Протокол #${req.id}</strong></p>
                 ${req.comment ? `<p class="mb-1 small">${req.comment}</p>` : ''}
                 <p class="mb-0 small text-muted">
                     <i class="bi bi-person me-1"></i>${req.author}<br>

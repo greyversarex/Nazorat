@@ -128,3 +128,5 @@ The app runs on port 5000.
 - December 2025: Added quick complete button (checkmark) on protocols and user requests tables
 - December 2025: Added avatar upload feature for workers with preview in form and display in worker cards
 - December 2025: Added protocol download feature (Word format) from request view page
+- December 2025: Increased avatar circle size on worker cards (80px → 110px)
+- December 2025: Replaced "Дархост/Дархостҳо" with "Протокол/Протоколҳо" throughout entire interface
