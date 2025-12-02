@@ -10,6 +10,7 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(150), nullable=True)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user')
+    avatar = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     requests = db.relationship('Request', backref='author', lazy=True)

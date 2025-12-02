@@ -228,6 +228,18 @@ def create_user():
         
         user = User(username=username, full_name=full_name, role=role)
         user.set_password(password)
+        
+        avatar_file = request.files.get('avatar')
+        if avatar_file and avatar_file.filename:
+            from werkzeug.utils import secure_filename
+            import uuid
+            filename = secure_filename(avatar_file.filename)
+            ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
+            if ext in ['jpg', 'jpeg', 'png', 'webp', 'gif']:
+                new_filename = f"avatar_{uuid.uuid4().hex}.{ext}"
+                avatar_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename))
+                user.avatar = new_filename
+        
         db.session.add(user)
         db.session.commit()
         
@@ -279,6 +291,22 @@ def edit_user(id):
         
         user.username = username
         user.full_name = full_name
+        
+        avatar_file = request.files.get('avatar')
+        if avatar_file and avatar_file.filename:
+            from werkzeug.utils import secure_filename
+            import uuid
+            filename = secure_filename(avatar_file.filename)
+            ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
+            if ext in ['jpg', 'jpeg', 'png', 'webp', 'gif']:
+                if user.avatar:
+                    old_avatar_path = os.path.join(current_app.config['UPLOAD_FOLDER'], user.avatar)
+                    if os.path.exists(old_avatar_path):
+                        os.remove(old_avatar_path)
+                new_filename = f"avatar_{uuid.uuid4().hex}.{ext}"
+                avatar_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename))
+                user.avatar = new_filename
+        
         db.session.commit()
         
         return redirect(url_for('admin.users'))
@@ -668,6 +696,7 @@ def admin_home():
             'id': worker.id,
             'username': worker.username,
             'full_name': worker.full_name or worker.username,
+            'avatar': worker.avatar,
             'new_count': new_count,
             'total_requests': total_requests
         })
