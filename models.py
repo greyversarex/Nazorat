@@ -55,6 +55,7 @@ class Request(db.Model):
     reply = db.Column(db.Text, nullable=True)
     replied_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    admin_read_at = db.Column(db.DateTime, nullable=True)
     
     @staticmethod
     def generate_reg_number():
