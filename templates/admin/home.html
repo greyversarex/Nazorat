@@ -26,10 +26,10 @@
     <div class="col-lg-3 col-md-4 col-sm-6">
         <a href="{{ url_for('admin.user_requests', id=worker.id) }}" class="text-decoration-none">
             <div class="worker-card position-relative">
-                {% if worker.unread_count > 0 %}
+                {% if worker.new_count > 0 %}
                 <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger notification-badge">
-                    {{ worker.unread_count }}
-                    <span class="visually-hidden">непрочитанных протоколов</span>
+                    {{ worker.new_count }}
+                    <span class="visually-hidden">новых протоколов</span>
                 </span>
                 {% endif %}
                 
@@ -48,7 +48,7 @@
                         <span class="stat-label">Дархостҳо</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value text-primary">{{ worker.unread_count }}</span>
+                        <span class="stat-value text-primary">{{ worker.new_count }}</span>
                         <span class="stat-label">Нав</span>
                     </div>
                 </div>

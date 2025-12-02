@@ -98,20 +98,33 @@ class Request(db.Model):
         return f'DOC-{year}-{new_num:04d}'
     
     STATUS_LABELS = {
+        'new': 'Нав',
         'under_review': 'Дар тафтиш',
         'completed': 'Иҷро шуд'
     }
     
     STATUS_CLASSES = {
+        'new': 'info',
         'under_review': 'warning',
         'completed': 'success'
     }
     
+    def get_effective_status(self):
+        """Get the effective status based on admin_read_at and status fields"""
+        if self.status == 'completed':
+            return 'completed'
+        elif self.admin_read_at is None:
+            return 'new'
+        else:
+            return 'under_review'
+    
     def get_status_label(self):
-        return self.STATUS_LABELS.get(self.status, self.status)
+        effective_status = self.get_effective_status()
+        return self.STATUS_LABELS.get(effective_status, effective_status)
     
     def get_status_class(self):
-        return self.STATUS_CLASSES.get(self.status, 'secondary')
+        effective_status = self.get_effective_status()
+        return self.STATUS_CLASSES.get(effective_status, 'secondary')
     
     def __repr__(self):
         return f'<Request {self.id}>'

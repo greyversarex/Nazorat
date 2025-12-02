@@ -149,13 +149,28 @@ def update_status(id):
     req = Request.query.get_or_404(id)
     new_status = request.form.get('status')
     
-    if new_status in Request.STATUS_LABELS:
+    if new_status in ['under_review', 'completed']:
         req.status = new_status
         db.session.commit()
         flash('Ҳолати дархост бо муваффақият тағйир дода шуд.', 'success')
     else:
         flash('Ҳолати нодуруст интихоб шуд.', 'danger')
     
+    return redirect(url_for('admin.protocols'))
+
+@admin_bp.route('/requests/<int:id>/complete', methods=['POST'])
+@login_required
+@admin_required
+def complete_request(id):
+    req = Request.query.get_or_404(id)
+    req.status = 'completed'
+    if req.admin_read_at is None:
+        req.admin_read_at = datetime.utcnow()
+    db.session.commit()
+    flash('Дархост иҷро шуд.', 'success')
+    redirect_to = request.form.get('redirect_to')
+    if redirect_to:
+        return redirect(redirect_to)
     return redirect(url_for('admin.protocols'))
 
 @admin_bp.route('/users')
@@ -639,9 +654,10 @@ def admin_home():
     
     worker_cards = []
     for worker in workers:
-        unread_count = Request.query.filter(
+        new_count = Request.query.filter(
             Request.user_id == worker.id,
-            Request.admin_read_at.is_(None)
+            Request.admin_read_at.is_(None),
+            Request.status != 'completed'
         ).count()
         
         total_requests = Request.query.filter(Request.user_id == worker.id).count()
@@ -650,7 +666,7 @@ def admin_home():
             'id': worker.id,
             'username': worker.username,
             'full_name': worker.full_name or worker.username,
-            'unread_count': unread_count,
+            'new_count': new_count,
             'total_requests': total_requests
         })
     
@@ -684,14 +700,19 @@ def protocols():
         query = query.filter(Request.topic_id == topic_filter)
     
     if status_filter and status_filter in Request.STATUS_LABELS:
-        query = query.filter(Request.status == status_filter)
+        if status_filter == 'new':
+            query = query.filter(Request.admin_read_at.is_(None), Request.status != 'completed')
+        elif status_filter == 'under_review':
+            query = query.filter(Request.admin_read_at.isnot(None), Request.status != 'completed')
+        elif status_filter == 'completed':
+            query = query.filter(Request.status == 'completed')
     
-    requests = query.all()
+    requests_list = query.all()
     topics = Topic.query.order_by(Topic.title).all()
     statuses = Request.STATUS_LABELS
     
     return render_template('admin/protocols.html', 
-                         requests=requests, 
+                         requests=requests_list, 
                          topics=topics,
                          statuses=statuses,
                          selected_topic=topic_filter,
