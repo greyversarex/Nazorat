@@ -151,6 +151,8 @@ def update_status(id):
     
     if new_status in ['under_review', 'completed']:
         req.status = new_status
+        if new_status == 'completed' and req.admin_read_at is None:
+            req.admin_read_at = datetime.utcnow()
         db.session.commit()
         flash('Ҳолати дархост бо муваффақият тағйир дода шуд.', 'success')
     else:

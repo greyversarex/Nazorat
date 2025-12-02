@@ -48,15 +48,17 @@ Note: Open registration is disabled. Only admins can create new users from the a
    - Geolocation (via browser Geolocation API)
    - Comments
    - Photo/Video uploads
-4. **Status Tracking**: Under Review → Completed (two statuses only)
+4. **Status Tracking**: Three-tier status system based on read state and completion
 5. **Admin Reply**: Admin can respond to requests with text replies
 6. **Request Deletion**: Admin can delete requests with confirmation
 7. **Map Integration**: Leaflet.js with OpenStreetMap for viewing request locations
 8. **PWA**: Installable on mobile devices
 
 ## Request Statuses (Tajik)
-- `under_review` = Дар тафтиш (Under review)
-- `completed` = Иҷро шуд (Completed)
+Effective status is determined by admin_read_at and status fields:
+- **Нав (New)**: Protocol not yet read by admin (admin_read_at is NULL)
+- **Дар тафтиш (Under Review)**: Protocol read but not completed (admin_read_at is set, status != 'completed')
+- **Иҷро шуд (Completed)**: Protocol marked as completed (status == 'completed')
 
 ## Running the Application
 ```bash
@@ -85,7 +87,7 @@ The app runs on port 5000.
 - Both numbers are generated atomically with retry mechanism to prevent duplicates
 
 ## Admin Panel Structure
-- **Панели Админ (Admin Home)**: Shows worker cards with unread protocol counters
+- **Панели Админ (Admin Home)**: Shows worker cards with new protocol counters (Нав)
 - **Протоколҳо (Protocols)**: All requests table with search/filter (formerly Dashboard)
 - **Омор (Statistics)**: Analytics with charts and download options (Word/Excel)
 - **Харита (Map)**: Geographic view of all requests
@@ -122,3 +124,5 @@ The app runs on port 5000.
 - December 2025: Added admin_read_at field for tracking read status of requests
 - December 2025: Added statistics download feature in Word and Excel formats
 - December 2025: Worker statistics download available from user requests page
+- December 2025: Unified three-tier status system: Нав (new/unread) → Дар тафтиш (read/under review) → Иҷро шуд (completed)
+- December 2025: Added quick complete button (checkmark) on protocols and user requests tables
