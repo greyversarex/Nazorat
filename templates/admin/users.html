@@ -42,7 +42,7 @@
                 </td>
                 <td data-label="Нақш">
                     {% if user.is_admin() %}
-                        <span class="badge bg-danger">Админ</span>
+                        <span class="badge bg-primary">Админ</span>
                     {% else %}
                         <span class="badge bg-secondary">Корбар</span>
                     {% endif %}
@@ -54,7 +54,7 @@
                 </td>
                 <td data-label="Дархостҳо">
                     <a href="{{ url_for('admin.user_requests', id=user.id) }}" class="text-decoration-none">
-                        <span class="badge bg-info">{{ user.requests|length }}</span>
+                        <span class="badge bg-secondary">{{ user.requests|length }}</span>
                     </a>
                 </td>
                 <td>

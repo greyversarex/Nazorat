@@ -138,23 +138,28 @@ main {
 }
 
 .bg-secondary {
-    background-color: var(--secondary-color) !important;
+    background-color: #94a3b8 !important;
+    color: #1e293b !important;
 }
 
 .bg-success {
-    background-color: #40916c !important;
+    background-color: #10b981 !important;
+    color: #fff !important;
 }
 
 .bg-info {
-    background-color: #52796f !important;
+    background-color: #64748b !important;
+    color: #fff !important;
 }
 
 .bg-warning {
-    background-color: #bc6c25 !important;
+    background-color: #f59e0b !important;
+    color: #1e293b !important;
 }
 
 .bg-danger {
-    background-color: #9b2226 !important;
+    background-color: #f87171 !important;
+    color: #1e293b !important;
 }
 
 .text-primary {
@@ -473,13 +478,13 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .btn-outline-success {
-    color: #40916c;
-    border-color: #40916c;
+    color: #10b981;
+    border-color: #10b981;
 }
 
 .btn-outline-success:hover {
-    background-color: #40916c;
-    border-color: #40916c;
+    background-color: #10b981;
+    border-color: #10b981;
     color: #fff;
     transform: translateY(-1px);
 }
@@ -492,35 +497,35 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .btn-outline-info {
-    color: #52796f;
-    border-color: #52796f;
+    color: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .btn-outline-info:hover {
-    background-color: #52796f;
-    border-color: #52796f;
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
     color: #fff;
 }
 
 .btn-outline-danger {
-    color: #9b2226;
-    border-color: #9b2226;
+    color: #f87171;
+    border-color: #f87171;
 }
 
 .btn-outline-danger:hover {
-    background-color: #9b2226;
-    border-color: #9b2226;
-    color: #fff;
+    background-color: #f87171;
+    border-color: #f87171;
+    color: #1e293b;
 }
 
 .btn-outline-secondary {
-    color: var(--secondary-color);
-    border-color: var(--secondary-color);
+    color: #64748b;
+    border-color: #64748b;
 }
 
 .btn-outline-secondary:hover {
-    background-color: var(--secondary-color);
-    border-color: var(--secondary-color);
+    background-color: #64748b;
+    border-color: #64748b;
     color: #fff;
 }
 
