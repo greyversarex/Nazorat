@@ -126,3 +126,4 @@ The app runs on port 5000.
 - December 2025: Worker statistics download available from user requests page
 - December 2025: Unified three-tier status system: Нав (new/unread) → Дар тафтиш (read/under review) → Иҷро шуд (completed)
 - December 2025: Added quick complete button (checkmark) on protocols and user requests tables
+- December 2025: Added avatar upload feature for workers with preview in form and display in worker cards
