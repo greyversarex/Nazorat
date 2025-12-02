@@ -139,7 +139,7 @@ main {
 
 .bg-secondary {
     background-color: #94a3b8 !important;
-    color: #1e293b !important;
+    color: #fff !important;
 }
 
 .bg-success {
@@ -154,12 +154,12 @@ main {
 
 .bg-warning {
     background-color: #f59e0b !important;
-    color: #1e293b !important;
+    color: #fff !important;
 }
 
 .bg-danger {
     background-color: #f87171 !important;
-    color: #1e293b !important;
+    color: #fff !important;
 }
 
 .text-primary {
